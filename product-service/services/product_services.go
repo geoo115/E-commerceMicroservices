@@ -15,6 +15,10 @@ type ProductServer struct {
 	proto.UnimplementedProductServiceServer
 }
 
+func NewProductServer() *ProductServer {
+	return &ProductServer{}
+}
+
 func (s *ProductServer) CreateProduct(ctx context.Context, req *proto.CreateProductRequest) (*proto.ProductResponse, error) {
 	tx := db.DB.Begin()
 	defer func() {
@@ -109,10 +113,12 @@ func (s *ProductServer) DeleteProduct(ctx context.Context, req *proto.DeleteProd
 
 func (s *ProductServer) SearchProducts(ctx context.Context, req *proto.SearchRequest) (*proto.ListProductsResponse, error) {
 	var products []models.Product
+	// Disambiguate the column reference by prefixing with the table name "products"
 	query := db.DB.Preload("Category").Preload("Inventory").
-		Where("LOWER(name) LIKE ?", fmt.Sprintf("%%%s%%", req.Query))
+		Where("LOWER(products.name) LIKE ?", fmt.Sprintf("%%%s%%", req.Query))
 
 	if req.Category != "" {
+		// Join with categories and disambiguate category name column
 		query = query.Joins("JOIN categories ON categories.id = products.category_id").
 			Where("LOWER(categories.name) = ?", req.Category)
 	}
