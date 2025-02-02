@@ -1,0 +1,44 @@
+package main
+
+import (
+	"log"
+	"net"
+	"os"
+
+	"cart-service/db"
+	pb "cart-service/proto"
+	"cart-service/services"
+
+	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
+)
+
+func main() {
+	// Load the .env file (you can adjust the path if needed)
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("Warning: .env file not found, using system environment variables")
+	}
+
+	// Initialize the database
+	db.InitDB()
+	defer db.CloseDB()
+
+	// Get the service port from environment variables
+	port := os.Getenv("CART_SERVICE_PORT")
+	if port == "" {
+		port = "50054"
+	}
+
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterCartServiceServer(grpcServer, services.NewCartServer())
+
+	log.Printf("Cart Service running on port %s", port)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}

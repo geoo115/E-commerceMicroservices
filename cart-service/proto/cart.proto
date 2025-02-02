@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package cart;
+
+option go_package = "./proto";
+
+// CartService defines the cart-related operations.
+service CartService {
+    rpc AddItemToCart(AddItemRequest) returns (CartResponse);
+    rpc UpdateCartItem(UpdateItemRequest) returns (CartResponse);
+    rpc RemoveCartItem(RemoveItemRequest) returns (CartResponse);
+    rpc GetCart(GetCartRequest) returns (CartListResponse);
+}
+
+message AddItemRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+    int32 quantity = 3;
+}
+
+message UpdateItemRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+    int32 quantity = 3;
+}
+
+message RemoveItemRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+}
+
+message GetCartRequest {
+    uint64 user_id = 1;
+}
+
+message CartResponse {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+    int32 quantity = 3;
+}
+
+message CartListResponse {
+    repeated CartResponse items = 1;
+}
