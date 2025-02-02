@@ -1,4 +1,3 @@
-// order-service/models/order.go
 package models
 
 import "gorm.io/gorm"
@@ -8,7 +7,7 @@ type Order struct {
 	UserID      uint        `json:"user_id"`
 	TotalAmount float64     `json:"total_amount"`
 	Status      string      `json:"status"`
-	Items       []OrderItem `gorm:"foreignKey:OrderID"`
+	Items       []OrderItem `json:"items" gorm:"foreignKey:OrderID"`
 }
 
 type OrderItem struct {
