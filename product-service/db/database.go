@@ -48,3 +48,11 @@ func InitDB() (*gorm.DB, error) {
 	log.Println("✅ Product Service Database connected successfully")
 	return db, nil
 }
+
+func CloseDB() {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance")
+	}
+	sqlDB.Close()
+}
