@@ -1,3 +1,4 @@
+```
 3️⃣ Authentication Service (auth-service)
 ✅ Design user authentication schema (PostgreSQL)
 ✅ Implement user registration and login
@@ -9,3 +10,4 @@
 ✅ Write tests for authentication flows
 ✅ Dockerize the auth-service
 
+```
