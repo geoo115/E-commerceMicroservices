@@ -1,36 +1,50 @@
 package main
 
 import (
+	"auth-service/db"
+	"auth-service/proto"
+	"auth-service/services"
 	"fmt"
 	"log"
 	"net"
 	"os"
 
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	db.initDB()
-	defer db.Close()
-
-	grpcServer := newGrpcServer()
-	authServer := services.NewAuthServer()
-	proto.RegisterAuthServiceServer(grpcServer, authServer)
-
-	port := os.Getenv("AuthPort")
-	if port == "" {
-		port = "50051"
-	}
-	lis, err := net.Listen("tcp", ":"+port)
+	// Load .env file
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Println("No .env file found, using system environment variables")
 	}
-	fmt.Printf("Auth service runnning on port :%s", port)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+
+	// Initialize Database
+	_, err = db.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// Get gRPC server port from env variable
+	port := os.Getenv("AUTH_SERVICE_PORT")
+	if port == "" {
+		port = "50051" // Default gRPC port
+	}
+
+	// Start gRPC server
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		log.Fatalf("Failed to listen on port %s: %v", port, err)
+	}
+
+	grpcServer := grpc.NewServer()
+	proto.RegisterAuthServiceServer(grpcServer, &services.AuthServer{})
+	reflection.Register(grpcServer)
+
+	log.Printf("🚀 Auth gRPC server running on port %s", port)
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("Failed to start gRPC server: %v", err)
 	}
 }
