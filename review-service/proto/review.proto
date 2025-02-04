@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package review;
+option go_package = "./proto";
+
+// ReviewService defines the review and wishlist operations.
+service ReviewService {
+    // Review operations
+    rpc CreateReview(CreateReviewRequest) returns (ReviewResponse);
+    rpc GetReview(GetReviewRequest) returns (ReviewResponse);
+    rpc ListReviews(ListReviewsRequest) returns (ListReviewsResponse);
+    rpc DeleteReview(DeleteReviewRequest) returns (ReviewResponse);
+
+    // Wishlist operations
+    rpc AddToWishlist(AddToWishlistRequest) returns (WishlistResponse);
+    rpc RemoveFromWishlist(RemoveFromWishlistRequest) returns (WishlistResponse);
+    rpc GetWishlist(GetWishlistRequest) returns (WishlistListResponse);
+}
+
+message CreateReviewRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+    int32 rating = 3;
+    string comment = 4;
+}
+
+message GetReviewRequest {
+    uint64 review_id = 1;
+}
+
+message ListReviewsRequest {
+    uint64 product_id = 1;
+}
+
+message DeleteReviewRequest {
+    uint64 review_id = 1;
+}
+
+message ReviewResponse {
+    uint64 review_id = 1;
+    uint64 user_id = 2;
+    uint64 product_id = 3;
+    int32 rating = 4;
+    string comment = 5;
+}
+
+message ListReviewsResponse {
+    repeated ReviewResponse reviews = 1;
+}
+
+message AddToWishlistRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+}
+
+message RemoveFromWishlistRequest {
+    uint64 user_id = 1;
+    uint64 product_id = 2;
+}
+
+message WishlistResponse {
+    uint64 wishlist_id = 1;
+    uint64 user_id = 2;
+    uint64 product_id = 3;
+}
+
+message GetWishlistRequest {
+    uint64 user_id = 1;
+}
+
+message WishlistListResponse {
+    repeated WishlistResponse items = 1;
+}
