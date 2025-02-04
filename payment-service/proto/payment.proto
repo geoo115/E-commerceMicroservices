@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "payment-service/proto";
+
+// PaymentService defines the payment operations.
+service PaymentService {
+    rpc ProcessPayment(ProcessPaymentRequest) returns (PaymentResponse);
+    rpc GetPayment(GetPaymentRequest) returns (PaymentResponse);
+}
+
+message ProcessPaymentRequest {
+    uint64 order_id = 1;
+    double amount = 2;
+    string currency = 3;
+    string payment_method = 4;  // e.g. "Credit Card", "PayPal", etc.
+    // For simplicity, we send only the last four digits.
+    string card_last_four = 5;
+}
+
+message GetPaymentRequest {
+    uint64 payment_id = 1;
+}
+
+message PaymentResponse {
+    uint64 payment_id = 1;
+    uint64 order_id = 2;
+    double amount = 3;
+    string currency = 4;
+    string payment_method = 5;
+    string status = 6;
+    string transaction_id = 7;
+    string failure_reason = 8;
+    string payment_gateway = 9;
+    string gateway_response = 10;
+    string processed_at = 11;
+}
