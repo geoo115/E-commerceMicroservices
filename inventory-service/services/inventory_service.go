@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"inventory-service/db"
-	"inventory-service/models"
-	pb "inventory-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/db"
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/inventory-service/proto"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

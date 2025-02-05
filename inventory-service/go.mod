@@ -1,4 +1,4 @@
-module inventory-service
+module github.com/geoo115/E-commerceMicroservices/inventory-service
 
 go 1.23.5
 

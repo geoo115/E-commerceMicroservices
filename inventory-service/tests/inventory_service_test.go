@@ -11,10 +11,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"inventory-service/db"
-	"inventory-service/models"
-	pb "inventory-service/proto"
-	"inventory-service/services"
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/db"
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/inventory-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/services"
 )
 
 var inventoryServer *services.InventoryServer
