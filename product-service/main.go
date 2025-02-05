@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/geoo115/E-commerceMicroservices/product-service/db"
-	"github.com/geoo115/E-commerceMicroservices/product-service/product-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/product-service/services"
 
 	"github.com/joho/godotenv"
