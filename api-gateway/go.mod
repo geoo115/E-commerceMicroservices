@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
 	google.golang.org/grpc v1.70.0
+    github.com/geoo115/E-commerceMicroservices/product-service v0.1.0
 )
 
 require (

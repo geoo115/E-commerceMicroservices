@@ -1,8 +1,8 @@
 package router
 
 import (
-	"api-gateway/handlers"
-	"api-gateway/middlewares"
+	"github.com/geoo115/E-commerceMicroservices/api-gateway/handlers"
+	"github.com/geoo115/E-commerceMicroservices/api-gateway/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

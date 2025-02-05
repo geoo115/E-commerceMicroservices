@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"api-gateway/router"
+	"github.com/geoo115/E-commerceMicroservices/api-gateway/router"
 
 	"github.com/spf13/viper"
 )
