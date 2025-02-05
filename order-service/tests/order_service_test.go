@@ -2,11 +2,12 @@ package tests
 
 import (
 	"context"
-	"order-service/db"
-	pb "order-service/proto"
-	"order-service/services"
 	"os"
 	"testing"
+
+	"github.com/geoo115/E-commerceMicroservices/order-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/order-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/order-service/services"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"

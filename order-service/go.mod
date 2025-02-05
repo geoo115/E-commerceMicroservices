@@ -1,4 +1,4 @@
-module order-service
+module github.com/geoo115/E-commerceMicroservices/order-service
 
 go 1.23.5
 

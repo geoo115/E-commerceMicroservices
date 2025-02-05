@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"order-service/db"
-	"order-service/models"
-	pb "order-service/proto"
+
+	"github.com/geoo115/E-commerceMicroservices/order-service/db"
+	"github.com/geoo115/E-commerceMicroservices/order-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/order-service/proto"
 )
 
 // OrderServer implements the gRPC OrderService.
