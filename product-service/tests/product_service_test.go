@@ -11,7 +11,7 @@ import (
 
 	"github.com/geoo115/E-commerceMicroservices/product-service/db"
 	"github.com/geoo115/E-commerceMicroservices/product-service/models"
-	pb "github.com/geoo115/E-commerceMicroservices/product-service/proto"
+	pb "github.com/geoo115/E-commerceMicroservices/product-service/product-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/product-service/services"
 )
 
