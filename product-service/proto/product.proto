@@ -1,7 +1,8 @@
 syntax = "proto3";
 
 package product;
-option go_package = "./proto";
+
+option go_package = "github.com/geoo115/E-commerceMicroservices/product-service/proto;proto";
 
 service ProductService {
     rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
