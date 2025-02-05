@@ -5,10 +5,10 @@ import (
 	"net"
 	"os"
 
-	"product-service/db"
-	"product-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/product-service/db"
+	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
 
-	"product-service/services"
+	"github.com/geoo115/E-commerceMicroservices/product-service/services"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"

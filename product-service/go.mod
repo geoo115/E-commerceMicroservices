@@ -1,10 +1,10 @@
-module product-service
+module github.com/geoo115/E-commerceMicroservices/product-service
 
 go 1.23.5
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
 	gorm.io/driver/postgres v1.5.11

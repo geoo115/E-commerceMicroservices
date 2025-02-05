@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"product-service/models"
+	"github.com/geoo115/E-commerceMicroservices/product-service/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"product-service/db"
-	"product-service/models"
-	"product-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/product-service/db"
+	"github.com/geoo115/E-commerceMicroservices/product-service/models"
+	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
 )
 
 type ProductServer struct {

@@ -9,10 +9,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
-	"product-service/db"
-	"product-service/models"
-	pb "product-service/proto"
-	"product-service/services"
+	"github.com/geoo115/E-commerceMicroservices/product-service/db"
+	"github.com/geoo115/E-commerceMicroservices/product-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/product-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/product-service/services"
 )
 
 var productServer *services.ProductServer
