@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	pb "../../product-service/proto"
+	pb "github.com/geoo115/E-commerceMicroservices/product-service/proto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
