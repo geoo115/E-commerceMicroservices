@@ -8,9 +8,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
-	"review-service/db"
-	pb "review-service/proto"
-	"review-service/services"
+	"github.com/geoo115/E-commerceMicroservices/review-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/review-service/services"
 )
 
 var reviewServer *services.ReviewServer

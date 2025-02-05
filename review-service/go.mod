@@ -1,4 +1,4 @@
-module review-service
+module github.com/geoo115/E-commerceMicroservices/review-service
 
 go 1.23.5
 

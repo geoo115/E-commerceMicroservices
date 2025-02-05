@@ -1,0 +1,182 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: usr
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for caching (used in cart service)
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka_broker
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  # API Gateway (Routes all requests to microservices)
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+    environment:
+      CONFIG_PATH: /app/config.yaml
+    volumes:
+      - ./api-gateway/config.yaml:/app/config.yaml
+
+  # Authentication Service
+  auth-service:
+    build: ./auth-service
+    container_name: auth_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+      JWT_SECRET: "supersecretkey"
+    depends_on:
+      - postgres
+
+  # Product Service
+  product-service:
+    build: ./product-service
+    container_name: product_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+    depends_on:
+      - postgres
+
+  # Order Service
+  order-service:
+    build: ./order-service
+    container_name: order_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+    depends_on:
+      - postgres
+
+  # Cart Service
+  cart-service:
+    build: ./cart-service
+    container_name: cart_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - redis
+
+  # Payment Service
+  payment-service:
+    build: ./payment-service
+    container_name: payment_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - postgres
+      - kafka
+
+  # Review Service
+  review-service:
+    build: ./review-service
+    container_name: review_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+    depends_on:
+      - postgres
+
+  # Inventory Service
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory_service
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USER: usr
+      DATABASE_PASSWORD: test123
+      DATABASE_NAME: ecommerce
+      DATABASE_PORT: 5432
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - postgres
+      - kafka
+
+  # Message Broker Service (Kafka Producer & Consumer)
+  message-broker:
+    build: ./message-broker
+    container_name: message_broker
+    restart: always
+    environment:
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - kafka
+
+volumes:
+  postgres_data:

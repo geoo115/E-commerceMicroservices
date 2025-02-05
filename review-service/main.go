@@ -5,9 +5,9 @@ import (
 	"net"
 	"os"
 
-	"review-service/db"
-	pb "review-service/proto"
-	"review-service/services"
+	"github.com/geoo115/E-commerceMicroservices/review-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/review-service/services"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
