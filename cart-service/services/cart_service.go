@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cart-service/db"
-	"cart-service/models"
-	pb "cart-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/cart-service/db"
+	"github.com/geoo115/E-commerceMicroservices/cart-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/cart-service/proto"
 
 	"gorm.io/gorm"
 )

@@ -1,4 +1,4 @@
-module cart-service
+module github.com/geoo115/E-commerceMicroservices/cart-service
 
 go 1.23.5
 

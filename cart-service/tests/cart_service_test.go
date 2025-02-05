@@ -8,9 +8,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
-	"cart-service/db"
-	pb "cart-service/proto"
-	"cart-service/services"
+	"github.com/geoo115/E-commerceMicroservices/cart-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/cart-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/cart-service/services"
 )
 
 var cartServer *services.CartServer
