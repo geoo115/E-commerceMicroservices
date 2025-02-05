@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"payment-service/db"
-	"payment-service/models"
-	pb "payment-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/db"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/models"
+	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
 
 	"github.com/google/uuid"
 )

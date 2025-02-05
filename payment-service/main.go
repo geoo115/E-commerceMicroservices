@@ -5,9 +5,9 @@ import (
 	"net"
 	"os"
 
-	"payment-service/db"
-	pb "payment-service/proto"
-	"payment-service/services"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/services"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"

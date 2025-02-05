@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"payment-service/models"
+
+	"github.com/geoo115/E-commerceMicroservices/payment-service/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

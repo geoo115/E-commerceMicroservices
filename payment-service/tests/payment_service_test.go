@@ -9,9 +9,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
-	"payment-service/db"
-	pb "payment-service/proto"
-	"payment-service/services"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/db"
+	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/payment-service/services"
 )
 
 var paymentServer *services.PaymentServer

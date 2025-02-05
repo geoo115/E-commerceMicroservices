@@ -1,4 +1,4 @@
-module payment-service
+module github.com/geoo115/E-commerceMicroservices/payment-service
 
 go 1.23.5
 
