@@ -1,11 +1,11 @@
-module auth-service
+module github.com/geoo115/E-commerceMicroservices/auth-service
 
 go 1.23.5
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.32.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4

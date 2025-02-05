@@ -1,10 +1,11 @@
 package db
 
 import (
-	"auth-service/models"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -49,4 +50,12 @@ func InitDB() (*gorm.DB, error) {
 
 	log.Println("✅ Database connected successfully")
 	return db, nil
+}
+
+func CloseDB() {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance")
+	}
+	sqlDB.Close()
 }

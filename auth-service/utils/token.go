@@ -1,10 +1,11 @@
 package utils
 
 import (
-	"auth-service/models"
 	"errors"
 	"os"
 	"time"
+
+	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
 
 	"github.com/golang-jwt/jwt/v4"
 )

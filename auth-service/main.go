@@ -1,13 +1,14 @@
 package main
 
 import (
-	"auth-service/db"
-	"auth-service/proto"
-	"auth-service/services"
 	"fmt"
 	"log"
 	"net"
 	"os"
+
+	"github.com/geoo115/E-commerceMicroservices/auth-service/db"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/services"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -26,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
+	defer db.CloseDB()
 
 	// Get gRPC server port from env variable
 	port := os.Getenv("AUTH_SERVICE_PORT")

@@ -1,14 +1,15 @@
 package tests
 
 import (
-	"auth-service/db"
-	"auth-service/models"
-	"auth-service/proto"
-	"auth-service/services"
-	"auth-service/utils"
 	"context"
 	"os"
 	"testing"
+
+	"github.com/geoo115/E-commerceMicroservices/auth-service/db"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/services"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"

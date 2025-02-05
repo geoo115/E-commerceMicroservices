@@ -1,14 +1,15 @@
 package services
 
 import (
-	"auth-service/db"
-	"auth-service/models"
-	"auth-service/proto"
-	"auth-service/utils"
 	"context"
 	"errors"
 	"fmt"
 	"log"
+
+	"github.com/geoo115/E-commerceMicroservices/auth-service/db"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
+	"github.com/geoo115/E-commerceMicroservices/auth-service/utils"
 
 	"gorm.io/gorm"
 )
