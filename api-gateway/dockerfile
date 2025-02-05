@@ -1,0 +1,31 @@
+# Build Stage
+FROM golang:1.18-alpine AS builder
+
+# Install git (required for module downloads)
+RUN apk update && apk add --no-cache git
+
+WORKDIR /app
+
+# Copy go.mod and go.sum to cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code
+COPY . .
+
+# Build the binary
+RUN go build -o api-gateway .
+
+# Final Stage
+FROM alpine:latest
+
+WORKDIR /root/
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/api-gateway .
+
+# Expose the port defined in config.yaml (default: 8080)
+EXPOSE 8080
+
+# Command to run the API Gateway
+CMD ["./api-gateway"]
