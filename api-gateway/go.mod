@@ -1,4 +1,4 @@
-module api-gateway
+module github.com/geoo115/E-commerceMicroservices/api-gateway
 
 go 1.23.5
 

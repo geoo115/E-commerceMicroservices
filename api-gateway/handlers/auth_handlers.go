@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
-
-	pb "github.com/geoo115/E-commerceMicroservices/auth-service/proto"
 )
 
 func getAuthServiceClient() (pb.AuthServiceClient, *grpc.ClientConn, error) {
