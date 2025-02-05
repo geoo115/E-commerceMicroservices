@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	pb "github.com/geoo115/go-microservices/auth-service/proto/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
