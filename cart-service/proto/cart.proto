@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package cart;
 
-option go_package = "./proto";
+option go_package = "github.com/geoo115/E-commerceMicroservices/cart-service/proto";
 
 // CartService defines the cart-related operations.
 service CartService {
@@ -10,6 +10,7 @@ service CartService {
     rpc UpdateCartItem(UpdateItemRequest) returns (CartResponse);
     rpc RemoveCartItem(RemoveItemRequest) returns (CartResponse);
     rpc GetCart(GetCartRequest) returns (CartListResponse);
+    rpc ClearCart(ClearCartRequest) returns (CartClearResponse);
 }
 
 message AddItemRequest {
@@ -41,4 +42,11 @@ message CartResponse {
 
 message CartListResponse {
     repeated CartResponse items = 1;
+}
+message ClearCartRequest {
+    uint64 user_id = 1;
+}
+
+message CartClearResponse {
+    string message = 1; 
 }

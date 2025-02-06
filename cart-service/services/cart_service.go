@@ -25,16 +25,16 @@ func NewCartServer() *CartServer {
 func (s *CartServer) AddItemToCart(ctx context.Context, req *pb.AddItemRequest) (*pb.CartResponse, error) {
 	var cartItem models.Cart
 
-	// Check if the item already exists in the cart
+	// Check if the item already exists in the cart.
 	result := db.DB.Where("user_id = ? AND product_id = ?", req.UserId, req.ProductId).First(&cartItem)
 	if result.Error == nil {
-		// Item already exists, update quantity
+		// Item exists; update the quantity.
 		cartItem.Quantity += int(req.Quantity)
 		if err := db.DB.Save(&cartItem).Error; err != nil {
 			return nil, fmt.Errorf("failed to update cart item: %v", err)
 		}
 	} else if result.Error == gorm.ErrRecordNotFound {
-		// Item does not exist, create a new entry
+		// Item does not exist; create a new entry.
 		cartItem = models.Cart{
 			UserID:    uint(req.UserId),
 			ProductID: uint(req.ProductId),
@@ -62,7 +62,7 @@ func (s *CartServer) UpdateCartItem(ctx context.Context, req *pb.UpdateItemReque
 		return nil, fmt.Errorf("cart item not found")
 	}
 
-	// Update quantity
+	// Update quantity.
 	cartItem.Quantity = int(req.Quantity)
 	if err := db.DB.Save(&cartItem).Error; err != nil {
 		return nil, fmt.Errorf("failed to update cart item: %v", err)
@@ -105,4 +105,15 @@ func (s *CartServer) GetCart(ctx context.Context, req *pb.GetCartRequest) (*pb.C
 	}
 
 	return response, nil
+}
+
+func (s *CartServer) ClearCart(ctx context.Context, req *pb.ClearCartRequest) (*pb.CartClearResponse, error) {
+	// Delete all cart items for the given user.
+	if err := db.DB.Where("user_id = ?", req.UserId).Delete(&models.Cart{}).Error; err != nil {
+		return nil, fmt.Errorf("failed to clear cart: %v", err)
+	}
+
+	return &pb.CartClearResponse{
+		Message: "Cart cleared successfully",
+	}, nil
 }
