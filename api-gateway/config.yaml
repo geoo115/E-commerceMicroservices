@@ -2,23 +2,22 @@ server:
   port: "8080"
 
 auth_service:
-  address: "localhost:50051"   # or use Docker service name if using docker-compose
+  address: "auth_service:50051"
 
 product_service:
-  address: "localhost:50052"
-  
-# You can add other microservice endpoints similarly:
- order_service:
-   address: "localhost:50053"
+  address: "product_service:50052"
 
- cart_service:
-   address: "localhost:50054"
+order_service:
+  address: "order_service:50053"
 
- payment_service:
-   address: "localhost:50055"
+cart_service:
+  address: "cart_service:50054"
 
- review_service:
-   address: "localhost:50056"
-   
- inventory_service:
-   address: "localhost:50057"
+payment_service:
+  address: "payment_service:50055"
+
+review_service:
+  address: "review_service:50056"
+
+inventory_service:
+  address: "inventory_service:50057"

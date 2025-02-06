@@ -3,16 +3,19 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/geoo115/E-commerceMicroservices/api-gateway/router"
-
 	"github.com/spf13/viper"
 )
 
 func initConfig() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Println("CONFIG_PATH not set, using default config path: config.yaml")
+		configPath = "config.yaml"
+	}
+	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error reading config file: %v", err)
 	}

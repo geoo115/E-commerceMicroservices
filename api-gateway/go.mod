@@ -4,7 +4,12 @@ go 1.23.5
 
 require (
 	github.com/geoo115/E-commerceMicroservices/auth-service v0.1.0
+	github.com/geoo115/E-commerceMicroservices/cart-service v0.0.0-20250205214630-1b2db9045042
+	github.com/geoo115/E-commerceMicroservices/inventory-service v0.0.0-20250205214630-1b2db9045042
+	github.com/geoo115/E-commerceMicroservices/order-service v0.0.0-20250205214630-1b2db9045042
+	github.com/geoo115/E-commerceMicroservices/payment-service v0.0.0-20250205214630-1b2db9045042
 	github.com/geoo115/E-commerceMicroservices/product-service v0.2.5
+	github.com/geoo115/E-commerceMicroservices/review-service v0.0.0-20250205214630-1b2db9045042
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
 	google.golang.org/grpc v1.70.0
