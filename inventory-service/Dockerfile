@@ -1,5 +1,5 @@
 # Build Stage
-FROM golang:1.18-alpine AS builder
+FROM golang:1.23.6-alpine AS builder
 
 # Install git to download modules
 RUN apk update && apk add --no-cache git

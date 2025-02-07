@@ -25,3 +25,18 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     restart: always
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+    environment:
+      CONFIG_PATH: /app/config.yaml
+    volumes:
+      - ./api-gateway/config.yaml:/app/config.yaml

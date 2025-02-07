@@ -24,21 +24,21 @@ func NewPaymentServer() *PaymentServer {
 
 // ProcessPayment processes a payment and stores it in the database.
 func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPaymentRequest) (*pb.PaymentResponse, error) {
-	// Create a Payment record
+	// Create a Payment record.
 	payment := models.Payment{
 		OrderID:         uint(req.OrderId),
 		TransactionID:   uuid.NewString(), // Generate a unique transaction ID.
 		PaymentMethod:   models.PaymentMethod(req.PaymentMethod),
 		Amount:          req.Amount,
 		Currency:        req.Currency,
-		Status:          models.PaymentPending, // Initial status
+		Status:          models.PaymentPending, // Initial status.
 		ProcessedAt:     time.Now(),
 		CardLastFour:    req.CardLastFour,
 		PaymentGateway:  "TestGateway",
 		GatewayResponse: "Payment processing simulated",
 	}
 
-	// Validate payment before saving
+	// Validate payment before saving.
 	if err := payment.Validate(); err != nil {
 		return nil, fmt.Errorf("payment validation failed: %v", err)
 	}
@@ -47,7 +47,7 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPayme
 		return nil, fmt.Errorf("failed to process payment: %v", err)
 	}
 
-	// For testing purposes, simulate success
+	// For testing purposes, simulate success.
 	payment.Status = models.PaymentSuccess
 	db.DB.Save(&payment)
 

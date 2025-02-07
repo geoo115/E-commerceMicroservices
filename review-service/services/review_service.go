@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ReviewServer implements the gRPC ReviewService.
 type ReviewServer struct {
 	pb.UnimplementedReviewServiceServer
 }

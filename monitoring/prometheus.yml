@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'services'
+    static_configs:
+      - targets: ['api_gateway:8080', 'auth_service:50051', 'order_service:50053']

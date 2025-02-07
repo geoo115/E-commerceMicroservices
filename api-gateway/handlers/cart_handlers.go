@@ -96,28 +96,28 @@ func RemoveFromCart(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// ClearCart clears all items from a user's cart.
-func ClearCart(c *gin.Context) {
-	userId := c.Param("userId")
-	uid, err := strconv.ParseUint(userId, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
-		return
-	}
-	client, conn, err := getCartServiceClient()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to cart service"})
-		return
-	}
-	defer conn.Close()
+// // ClearCart clears all items from a user's cart.
+// func ClearCart(c *gin.Context) {
+// 	userId := c.Param("userId")
+// 	uid, err := strconv.ParseUint(userId, 10, 32)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+// 		return
+// 	}
+// 	client, conn, err := getCartServiceClient()
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to cart service"})
+// 		return
+// 	}
+// 	defer conn.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	defer cancel()
 
-	resp, err := client.ClearCart(ctx, &pbCart.ClearCartRequest{UserId: uint32(uid)})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, resp)
-}
+// 	resp, err := client.ClearCart(ctx, &pbCart.ClearCartRequest{UserId: uint32(uid)})
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, resp)
+// }

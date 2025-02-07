@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// InventoryServer implements the gRPC InventoryService.
 type InventoryServer struct {
 	pb.UnimplementedInventoryServiceServer
 }
@@ -38,17 +39,19 @@ func (s *InventoryServer) GetInventory(ctx context.Context, req *pb.GetInventory
 	}, nil
 }
 
+// UpdateStock updates the inventory stock for a given product.
+// The delta value may be positive (restock) or negative (deduction).
 func (s *InventoryServer) UpdateStock(ctx context.Context, req *pb.UpdateStockRequest) (*pb.InventoryResponse, error) {
 	var inv models.Inventory
 	var product models.Product
 
-	// Start transaction
+	// Begin a transaction.
 	tx := db.DB.Begin()
 	if tx.Error != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %v", tx.Error)
 	}
 
-	// Ensure product exists
+	// Ensure the product exists.
 	if err := tx.Where("id = ?", req.ProductId).First(&product).Error; err != nil {
 		tx.Rollback()
 		if err == gorm.ErrRecordNotFound {
@@ -57,14 +60,14 @@ func (s *InventoryServer) UpdateStock(ctx context.Context, req *pb.UpdateStockRe
 		return nil, fmt.Errorf("failed to fetch product: %v", err)
 	}
 
-	// Lock inventory row to prevent concurrent modifications
+	// Lock the inventory row to prevent concurrent modifications.
 	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("product_id = ?", req.ProductId).
 		First(&inv).Error
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// Create inventory if not found
+			// Create inventory if not found.
 			inv = models.Inventory{
 				ProductID: uint(req.ProductId),
 				Stock:     0,
@@ -79,20 +82,20 @@ func (s *InventoryServer) UpdateStock(ctx context.Context, req *pb.UpdateStockRe
 		}
 	}
 
-	// Update stock safely
+	// Update stock safely.
 	newStock := inv.Stock + int(req.Delta)
 	if newStock < 0 {
 		tx.Rollback()
 		return nil, fmt.Errorf("insufficient stock for product %d", req.ProductId)
 	}
 
-	// Apply stock update
+	// Apply the stock update.
 	if err := tx.Model(&inv).Update("stock", newStock).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to update stock: %v", err)
 	}
 
-	// Commit transaction
+	// Commit the transaction.
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}

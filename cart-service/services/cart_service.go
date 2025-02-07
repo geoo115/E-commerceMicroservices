@@ -108,7 +108,6 @@ func (s *CartServer) GetCart(ctx context.Context, req *pb.GetCartRequest) (*pb.C
 }
 
 func (s *CartServer) ClearCart(ctx context.Context, req *pb.ClearCartRequest) (*pb.CartClearResponse, error) {
-	// Delete all cart items for the given user.
 	if err := db.DB.Where("user_id = ?", req.UserId).Delete(&models.Cart{}).Error; err != nil {
 		return nil, fmt.Errorf("failed to clear cart: %v", err)
 	}

@@ -1,5 +1,5 @@
 # Use an official lightweight Go image as the base image
-FROM golang:1.18-alpine AS builder
+FROM golang:1.23.6-alpine AS builder
 
 RUN apk update && apk add --no-cache git
 

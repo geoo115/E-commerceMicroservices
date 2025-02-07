@@ -91,7 +91,6 @@ func (s *OrderServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest)
 }
 
 // DeleteOrder deletes an order by its ID.
-// We use the same request message as GetOrderRequest.
 func (s *OrderServer) DeleteOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.OrderResponse, error) {
 	// First, retrieve the order so we can return its data.
 	orderResp, err := s.getOrderResponse(uint(req.OrderId))

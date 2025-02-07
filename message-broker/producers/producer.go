@@ -1,3 +1,4 @@
+// message-broker/producers/producer.go
 package producers
 
 import (
@@ -8,7 +9,7 @@ import (
 
 // PublishEvent sends an event to Kafka
 func PublishEvent(topic string, message []byte) error {
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost:9092"})
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka_broker:9092"})
 	if err != nil {
 		return err
 	}

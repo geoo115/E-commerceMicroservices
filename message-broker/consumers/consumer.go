@@ -1,3 +1,4 @@
+// message-broker/consumers/consumer.go
 package consumers
 
 import (
@@ -9,7 +10,7 @@ import (
 // ConsumeEvents listens to a Kafka topic and processes messages
 func ConsumeEvents(topic string, handler func([]byte)) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
+		"bootstrap.servers": "kafka_broker:9092",
 		"group.id":          "order-group",
 		"auto.offset.reset": "earliest",
 	})

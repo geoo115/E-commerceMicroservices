@@ -50,7 +50,7 @@ func SetupRouter() *gin.Engine {
 		cartGroup.GET("/:userId", handlers.GetCart)
 		cartGroup.POST("/add", handlers.AddToCart)
 		cartGroup.POST("/remove", handlers.RemoveFromCart)
-		cartGroup.DELETE("/clear/:userId", handlers.ClearCart)
+		// cartGroup.DELETE("/clear/:userId", handlers.ClearCart)
 	}
 
 	// Payment routes
