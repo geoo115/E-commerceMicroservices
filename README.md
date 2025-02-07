@@ -14,8 +14,8 @@ A production-ready, scalable e-commerce platform built with microservices archit
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/ecommerce-microservices.git
-cd ecommerce-microservices
+git clone https://github.com/geoo115/E-commerceMicroservices.git
+cd E-commerceMicroservices
 
 # Configure environment
 cp .env.example .env
