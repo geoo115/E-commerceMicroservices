@@ -10,10 +10,13 @@ service AuthService {
 }
 
 message SignupRequest {
-    string username = 1;
-    string password = 2;
-    string email = 3;
-    string phone = 4;
+    string username  = 1;
+    string password  = 2;
+    string email     = 3;
+    string phone     = 4;
+    string address   = 5;
+    string city      = 6;
+    string post_code = 7;
 }
 
 message LoginRequest {
@@ -26,14 +29,14 @@ message ValidateTokenRequest {
 }
 
 message AuthResponse {
-    uint64 user_id = 1;
+    uint64 user_id      = 1;
     string access_token = 2;
-    string username = 3;
-    string email = 4;
+    string username     = 3;
+    string email        = 4;
 }
 
 message ValidateResponse {
     bool is_valid = 1;
     uint64 user_id = 2;
-    string role = 3;
+    string role    = 3;
 }

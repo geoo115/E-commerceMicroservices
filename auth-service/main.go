@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/auth-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/db"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/services"
@@ -16,33 +17,35 @@ import (
 )
 
 func main() {
-	// Load .env file
+	// Load environment variables.
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, using system environment variables")
 	}
 
-	// Initialize Database
+	// Initialize the database.
 	_, err = db.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.CloseDB()
 
-	// Get gRPC server port from env variable
+	// Initialize Redis.
+	cache.InitRedis()
+
+	// Determine gRPC server port.
 	port := os.Getenv("AUTH_SERVICE_PORT")
 	if port == "" {
-		port = "50051" // Default gRPC port
+		port = "50051"
 	}
 
-	// Start gRPC server
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatalf("Failed to listen on port %s: %v", port, err)
 	}
 
 	grpcServer := grpc.NewServer()
-	proto.RegisterAuthServiceServer(grpcServer, &services.AuthServer{})
+	proto.RegisterAuthServiceServer(grpcServer, services.NewAuthServer())
 	reflection.Register(grpcServer)
 
 	log.Printf("🚀 Auth gRPC server running on port %s", port)
