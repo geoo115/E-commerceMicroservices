@@ -1,15 +1,16 @@
-// product-service/services/product_service.go
 package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
-
+	"github.com/geoo115/E-commerceMicroservices/product-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/product-service/db"
 	"github.com/geoo115/E-commerceMicroservices/product-service/models"
+	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
 )
 
 type ProductServer struct {
@@ -41,7 +42,7 @@ func (s *ProductServer) CreateProduct(ctx context.Context, req *proto.CreateProd
 		return nil, fmt.Errorf("failed to create product: %v", err)
 	}
 
-	// In the CreateProduct method, modify the inventory creation:
+	// Create inventory record
 	inventory := models.Inventory{
 		ProductID: product.ID,
 		Stock:     int(req.Stock), // Convert int32 to int
@@ -56,6 +57,9 @@ func (s *ProductServer) CreateProduct(ctx context.Context, req *proto.CreateProd
 		tx.Rollback()
 		return nil, fmt.Errorf("transaction failed: %v", err)
 	}
+
+	// Remove any cached version if exists (optional)
+	cache.RedisClient.Del(ctx, fmt.Sprintf("product:%d", product.ID))
 
 	return s.getProductResponse(product.ID)
 }
@@ -100,6 +104,9 @@ func (s *ProductServer) UpdateProduct(ctx context.Context, req *proto.UpdateProd
 		return nil, fmt.Errorf("failed to update product: %v", err)
 	}
 
+	// Invalidate cache for this product.
+	cache.RedisClient.Del(ctx, fmt.Sprintf("product:%d", product.ID))
+
 	return s.getProductResponse(uint(req.Id))
 }
 
@@ -108,6 +115,9 @@ func (s *ProductServer) DeleteProduct(ctx context.Context, req *proto.DeleteProd
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to delete product: %v", result.Error)
 	}
+
+	// Remove from cache.
+	cache.RedisClient.Del(ctx, fmt.Sprintf("product:%d", req.Id))
 
 	return &proto.DeleteResponse{Success: result.RowsAffected > 0}, nil
 }
@@ -136,12 +146,31 @@ func (s *ProductServer) SearchProducts(ctx context.Context, req *proto.SearchReq
 	return response, nil
 }
 
-// Helper functions
+// getProductResponse first checks Redis cache before querying the database.
 func (s *ProductServer) getProductResponse(id uint) (*proto.ProductResponse, error) {
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("product:%d", id)
+	cached, err := cache.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cached != "" {
+		var product models.Product
+		if err := json.Unmarshal([]byte(cached), &product); err == nil {
+			return convertToProtoProduct(product), nil
+		}
+		// If unmarshalling fails, continue to query DB.
+	}
+
+	// Not in cache, fetch from database.
 	var product models.Product
 	if err := db.DB.Preload("Category").Preload("Inventory").First(&product, id).Error; err != nil {
 		return nil, errors.New("product not found")
 	}
+
+	// Cache the result with a TTL of 5 minutes.
+	productJSON, err := json.Marshal(product)
+	if err == nil {
+		cache.RedisClient.Set(ctx, cacheKey, productJSON, 5*time.Minute)
+	}
+
 	return convertToProtoProduct(product), nil
 }
 
