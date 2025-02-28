@@ -3,7 +3,7 @@ package consumers
 import (
 	"log"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // ConsumeEvents listens to a Kafka topic and processes each message using the provided handler.
