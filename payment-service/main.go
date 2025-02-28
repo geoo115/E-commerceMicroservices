@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/payment-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/payment-service/db"
 	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/payment-service/services"
@@ -15,16 +16,19 @@ import (
 )
 
 func main() {
-	// Load environment variables from .env file (adjust path if needed)
+	// Load environment variables from .env file.
 	if err := godotenv.Load(".env"); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	// Initialize the database
+	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
 
-	// Get the service port from environment variables
+	// Initialize Redis.
+	cache.InitRedis()
+
+	// Get the service port from environment variables.
 	port := os.Getenv("PAYMENT_SERVICE_PORT")
 	if port == "" {
 		port = "50055"

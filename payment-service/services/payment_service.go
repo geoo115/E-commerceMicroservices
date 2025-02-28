@@ -2,14 +2,17 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
+	"github.com/geoo115/E-commerceMicroservices/message-broker/producers"
+	"github.com/geoo115/E-commerceMicroservices/message-broker/topics"
 	"github.com/geoo115/E-commerceMicroservices/payment-service/db"
 	"github.com/geoo115/E-commerceMicroservices/payment-service/models"
 	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
-
-	"github.com/google/uuid"
 )
 
 // PaymentServer implements the gRPC PaymentService.
@@ -22,23 +25,22 @@ func NewPaymentServer() *PaymentServer {
 	return &PaymentServer{}
 }
 
-// ProcessPayment processes a payment and stores it in the database.
+// ProcessPayment processes a payment, stores it, and publishes a payment_successful event.
 func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPaymentRequest) (*pb.PaymentResponse, error) {
-	// Create a Payment record.
 	payment := models.Payment{
 		OrderID:         uint(req.OrderId),
-		TransactionID:   uuid.NewString(), // Generate a unique transaction ID.
+		TransactionID:   uuid.NewString(),
 		PaymentMethod:   models.PaymentMethod(req.PaymentMethod),
 		Amount:          req.Amount,
 		Currency:        req.Currency,
-		Status:          models.PaymentPending, // Initial status.
+		Status:          models.PaymentPending,
 		ProcessedAt:     time.Now(),
 		CardLastFour:    req.CardLastFour,
 		PaymentGateway:  "TestGateway",
 		GatewayResponse: "Payment processing simulated",
 	}
 
-	// Validate payment before saving.
+	// Validate and create payment record.
 	if err := payment.Validate(); err != nil {
 		return nil, fmt.Errorf("payment validation failed: %v", err)
 	}
@@ -47,9 +49,20 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPayme
 		return nil, fmt.Errorf("failed to process payment: %v", err)
 	}
 
-	// For testing purposes, simulate success.
+	// Simulate payment success.
 	payment.Status = models.PaymentSuccess
 	db.DB.Save(&payment)
+
+	// Flush any existing cache for this payment (if applicable).
+	// producers.PublishEvent will be used to notify other services.
+	eventPayload, err := json.Marshal(payment)
+	if err != nil {
+		// Log and continue.
+	} else {
+		if err := producers.PublishEvent(topics.PaymentSuccessful, eventPayload); err != nil {
+			// Log error but continue.
+		}
+	}
 
 	return &pb.PaymentResponse{
 		PaymentId:       uint64(payment.ID),
@@ -66,7 +79,7 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPayme
 	}, nil
 }
 
-// GetPayment retrieves a payment by its ID.
+// GetPayment retrieves a payment by its ID (cache integration can be added similarly if desired).
 func (s *PaymentServer) GetPayment(ctx context.Context, req *pb.GetPaymentRequest) (*pb.PaymentResponse, error) {
 	var payment models.Payment
 	if err := db.DB.First(&payment, req.PaymentId).Error; err != nil {
