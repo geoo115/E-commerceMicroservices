@@ -2,8 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/geoo115/E-commerceMicroservices/review-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/review-service/db"
 	"github.com/geoo115/E-commerceMicroservices/review-service/models"
 	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
@@ -16,9 +19,21 @@ type ReviewServer struct {
 	pb.UnimplementedReviewServiceServer
 }
 
-// NewReviewServer creates and returns a new ReviewServer instance.
 func NewReviewServer() *ReviewServer {
 	return &ReviewServer{}
+}
+
+// helper functions for cache keys.
+func reviewCacheKey(reviewID uint) string {
+	return fmt.Sprintf("review:%d", reviewID)
+}
+
+func reviewsByProductCacheKey(productID uint64) string {
+	return fmt.Sprintf("reviews:product:%d", productID)
+}
+
+func wishlistCacheKey(userID uint64) string {
+	return fmt.Sprintf("wishlist:user:%d", userID)
 }
 
 // CreateReview creates a new review.
@@ -34,6 +49,9 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 		return nil, fmt.Errorf("failed to create review: %v", err)
 	}
 
+	// Invalidate the list cache for the product.
+	cache.RedisClient.Del(ctx, reviewsByProductCacheKey(req.ProductId))
+
 	return &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
 		UserId:    uint64(review.UserID),
@@ -45,6 +63,16 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 
 // GetReview retrieves a review by its ID.
 func (s *ReviewServer) GetReview(ctx context.Context, req *pb.GetReviewRequest) (*pb.ReviewResponse, error) {
+	key := reviewCacheKey(uint(req.ReviewId))
+	cached, err := cache.RedisClient.Get(ctx, key).Result()
+	if err == nil && cached != "" {
+		var reviewResp pb.ReviewResponse
+		if err := json.Unmarshal([]byte(cached), &reviewResp); err == nil {
+			return &reviewResp, nil
+		}
+		// If unmarshalling fails, fall back to DB.
+	}
+
 	var review models.Review
 	if err := db.DB.First(&review, req.ReviewId).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -53,17 +81,34 @@ func (s *ReviewServer) GetReview(ctx context.Context, req *pb.GetReviewRequest) 
 		return nil, fmt.Errorf("failed to get review: %v", err)
 	}
 
-	return &pb.ReviewResponse{
+	resp := &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
 		UserId:    uint64(review.UserID),
 		ProductId: uint64(review.ProductID),
 		Rating:    int32(review.Rating),
 		Comment:   review.Comment,
-	}, nil
+	}
+
+	// Cache the response for 5 minutes.
+	if bytes, err := json.Marshal(resp); err == nil {
+		cache.RedisClient.Set(ctx, key, bytes, 5*time.Minute)
+	}
+
+	return resp, nil
 }
 
 // ListReviews lists all reviews for a given product.
 func (s *ReviewServer) ListReviews(ctx context.Context, req *pb.ListReviewsRequest) (*pb.ListReviewsResponse, error) {
+	key := reviewsByProductCacheKey(req.ProductId)
+	cached, err := cache.RedisClient.Get(ctx, key).Result()
+	if err == nil && cached != "" {
+		var listResp pb.ListReviewsResponse
+		if err := json.Unmarshal([]byte(cached), &listResp); err == nil {
+			return &listResp, nil
+		}
+		// Fall back to DB if unmarshal fails.
+	}
+
 	var reviews []models.Review
 	if err := db.DB.Where("product_id = ?", req.ProductId).Find(&reviews).Error; err != nil {
 		return nil, fmt.Errorf("failed to list reviews: %v", err)
@@ -78,6 +123,11 @@ func (s *ReviewServer) ListReviews(ctx context.Context, req *pb.ListReviewsReque
 			Rating:    int32(r.Rating),
 			Comment:   r.Comment,
 		})
+	}
+
+	// Cache the list response for 5 minutes.
+	if bytes, err := json.Marshal(res); err == nil {
+		cache.RedisClient.Set(ctx, key, bytes, 5*time.Minute)
 	}
 
 	return res, nil
@@ -96,6 +146,10 @@ func (s *ReviewServer) DeleteReview(ctx context.Context, req *pb.DeleteReviewReq
 	if err := db.DB.Delete(&review).Error; err != nil {
 		return nil, fmt.Errorf("failed to delete review: %v", err)
 	}
+
+	// Invalidate the caches.
+	cache.RedisClient.Del(ctx, reviewCacheKey(uint(req.ReviewId)))
+	cache.RedisClient.Del(ctx, reviewsByProductCacheKey(uint64(review.ProductID)))
 
 	return &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
@@ -119,6 +173,9 @@ func (s *ReviewServer) AddToWishlist(ctx context.Context, req *pb.AddToWishlistR
 		return nil, fmt.Errorf("failed to add to wishlist: %v", err)
 	}
 
+	// Invalidate wishlist cache for the user.
+	cache.RedisClient.Del(ctx, wishlistCacheKey(req.UserId))
+
 	return &pb.WishlistResponse{
 		WishlistId: uint64(wishlist.ID),
 		UserId:     uint64(wishlist.UserID),
@@ -138,6 +195,9 @@ func (s *ReviewServer) RemoveFromWishlist(ctx context.Context, req *pb.RemoveFro
 		return nil, fmt.Errorf("failed to remove from wishlist: %v", err)
 	}
 
+	// Invalidate wishlist cache for the user.
+	cache.RedisClient.Del(ctx, wishlistCacheKey(req.UserId))
+
 	return &pb.WishlistResponse{
 		WishlistId: uint64(wishlist.ID),
 		UserId:     uint64(wishlist.UserID),
@@ -147,6 +207,16 @@ func (s *ReviewServer) RemoveFromWishlist(ctx context.Context, req *pb.RemoveFro
 
 // GetWishlist retrieves all wishlist items for a user.
 func (s *ReviewServer) GetWishlist(ctx context.Context, req *pb.GetWishlistRequest) (*pb.WishlistListResponse, error) {
+	key := wishlistCacheKey(req.UserId)
+	cached, err := cache.RedisClient.Get(ctx, key).Result()
+	if err == nil && cached != "" {
+		var wishlistResp pb.WishlistListResponse
+		if err := json.Unmarshal([]byte(cached), &wishlistResp); err == nil {
+			return &wishlistResp, nil
+		}
+		// Fall back to DB if unmarshal fails.
+	}
+
 	var wishlistItems []models.Wishlist
 	if err := db.DB.Where("user_id = ?", req.UserId).Find(&wishlistItems).Error; err != nil {
 		return nil, fmt.Errorf("failed to get wishlist: %v", err)
@@ -160,5 +230,11 @@ func (s *ReviewServer) GetWishlist(ctx context.Context, req *pb.GetWishlistReque
 			ProductId:  uint64(item.ProductID),
 		})
 	}
+
+	// Cache the wishlist response for 5 minutes.
+	if bytes, err := json.Marshal(res); err == nil {
+		cache.RedisClient.Set(ctx, key, bytes, 5*time.Minute)
+	}
+
 	return res, nil
 }

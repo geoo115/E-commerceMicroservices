@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/review-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/review-service/db"
 	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/review-service/services"
@@ -20,9 +21,12 @@ func main() {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	// Initialize the database
+	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
+
+	// Initialize Redis.
+	cache.InitRedis()
 
 	// Get the service port.
 	port := os.Getenv("REVIEW_SERVICE_PORT")
