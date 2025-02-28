@@ -16,22 +16,22 @@ import (
 )
 
 func main() {
-	// Load environment variables from .env.
 	if err := godotenv.Load(".env"); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
 
 	// Initialize Redis.
 	cache.InitRedis()
 
-	// Get the service port from environment variables.
+	// Start consumer for order_placed events.
+	services.StartOrderPlacedConsumer()
+
 	port := os.Getenv("INVENTORY_SERVICE_PORT")
 	if port == "" {
-		port = "50057" // default port if not set
+		port = "50057"
 	}
 
 	lis, err := net.Listen("tcp", ":"+port)
