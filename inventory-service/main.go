@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/inventory-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/inventory-service/db"
 	pb "github.com/geoo115/E-commerceMicroservices/inventory-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/inventory-service/services"
@@ -20,9 +21,12 @@ func main() {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	// Initialize database.
+	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
+
+	// Initialize Redis.
+	cache.InitRedis()
 
 	// Get the service port from environment variables.
 	port := os.Getenv("INVENTORY_SERVICE_PORT")
