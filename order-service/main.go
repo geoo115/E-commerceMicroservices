@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/order-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/order-service/db"
 	pb "github.com/geoo115/E-commerceMicroservices/order-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/order-service/services"
@@ -23,6 +24,9 @@ func main() {
 	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
+
+	// Initialize Redis.
+	cache.InitRedis()
 
 	// Get the service port.
 	port := os.Getenv("ORDER_SERVICE_PORT")
