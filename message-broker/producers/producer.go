@@ -1,4 +1,3 @@
-// message-broker/producers/producer.go
 package producers
 
 import (
@@ -7,9 +6,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-// PublishEvent sends an event to Kafka
+// PublishEvent sends an event to Kafka on the specified topic.
 func PublishEvent(topic string, message []byte) error {
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka_broker:9092"})
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": "kafka_broker:9092",
+	})
 	if err != nil {
 		return err
 	}
@@ -20,6 +21,9 @@ func PublishEvent(topic string, message []byte) error {
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          message,
 	}, deliveryChan)
+	if err != nil {
+		return err
+	}
 
 	e := <-deliveryChan
 	m := e.(*kafka.Message)
