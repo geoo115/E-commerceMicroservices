@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/geoo115/E-commerceMicroservices/message-broker/producers"
+	"github.com/geoo115/E-commerceMicroservices/message-broker/topics"
 	"github.com/geoo115/E-commerceMicroservices/review-service/cache"
 	"github.com/geoo115/E-commerceMicroservices/review-service/db"
 	"github.com/geoo115/E-commerceMicroservices/review-service/models"
 	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
-
 	"gorm.io/gorm"
 )
 
@@ -36,7 +38,6 @@ func wishlistCacheKey(userID uint64) string {
 	return fmt.Sprintf("wishlist:user:%d", userID)
 }
 
-// CreateReview creates a new review.
 func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewRequest) (*pb.ReviewResponse, error) {
 	review := models.Review{
 		UserID:    uint(req.UserId),
@@ -49,8 +50,15 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 		return nil, fmt.Errorf("failed to create review: %v", err)
 	}
 
-	// Invalidate the list cache for the product.
-	cache.RedisClient.Del(ctx, reviewsByProductCacheKey(req.ProductId))
+	// Publish review_added event.
+	eventPayload, err := json.Marshal(review)
+	if err != nil {
+		log.Printf("Failed to marshal review event: %v", err)
+	} else {
+		if err := producers.PublishEvent(topics.ReviewAdded, eventPayload); err != nil {
+			log.Printf("Failed to publish review event: %v", err)
+		}
+	}
 
 	return &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
