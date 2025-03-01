@@ -11,6 +11,7 @@ import (
 	"github.com/geoo115/E-commerceMicroservices/product-service/db"
 	"github.com/geoo115/E-commerceMicroservices/product-service/models"
 	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
+	"gorm.io/gorm"
 )
 
 type ProductServer struct {
@@ -189,4 +190,20 @@ func convertToProtoProduct(p models.Product) *proto.ProductResponse {
 			Stock:     int32(p.Inventory.Stock),
 		},
 	}
+}
+
+type ProductService struct {
+	DB *gorm.DB
+}
+
+func (s *ProductService) CreateCategory(ctx context.Context, req *proto.CreateCategoryRequest) (*proto.CategoryResponse, error) {
+	category := models.Category{Name: req.Name}
+	if err := s.DB.Create(&category).Error; err != nil {
+		return nil, err
+	}
+
+	return &proto.CategoryResponse{
+		Id:   uint32(category.ID),
+		Name: category.Name,
+	}, nil
 }
