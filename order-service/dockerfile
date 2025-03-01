@@ -1,35 +1,23 @@
 # Build Stage
 FROM golang:1.23.6-alpine AS builder
 
-# Install necessary packages (e.g., git) for downloading modules
 RUN apk update && apk add --no-cache git
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the go.mod and go.sum files to leverage Docker cache for dependencies
 COPY go.mod go.sum ./
-
-# Download all dependencies
 RUN go mod download
 
-# Copy the entire source code into the container
-COPY . .
+# Corrected COPY path
+COPY message-broker ./message-broker
+COPY order-service ./order-service
 
-# Build the order-service binary
-RUN go build -o order-service .
+# Build from the order-service directory
+RUN go build -o order-service ./order-service
 
-# Final Stage: Use a minimal image
-FROM alpine:latest
-
-# Set the working directory for the final image
+# Final Stage
+FROM alpine:3.20
 WORKDIR /root/
-
-# Copy the built binary from the builder stage
 COPY --from=builder /app/order-service .
-
-# Expose the service port (adjust if your ORDER_SERVICE_PORT environment variable uses a different port)
 EXPOSE 50053
-
-# Command to run the order-service binary
 CMD ["./order-service"]

@@ -1,7 +1,6 @@
-# Use Debian-based image for better compatibility with C libraries
+# Use Debian-based image for builder
 FROM golang:1.23-bookworm AS builder
 
-# Install build dependencies
 RUN apt-get update && apt-get install -y \
     librdkafka-dev \
     gcc \
@@ -14,10 +13,10 @@ RUN go mod download
 COPY . .
 RUN go build -o message-broker .
 
-# Final stage
+# Final stage with runtime library
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
-    librdkafka-dev \
+    librdkafka1 \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/
 COPY --from=builder /app/message-broker .

@@ -95,7 +95,9 @@ services:
   # Core Microservices
   # ======================
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     container_name: api_gateway
     restart: always
     ports:
@@ -110,7 +112,9 @@ services:
       - ./api-gateway/config.yaml:/app/config.yaml
 
   auth-service:
-    build: ./auth-service
+    build:
+      context: ./auth-service 
+      dockerfile: Dockerfile
     container_name: auth_service
     restart: always
     environment:
@@ -125,7 +129,9 @@ services:
       - postgres
 
   product-service:
-    build: ./product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
     container_name: product_service
     restart: always
     environment:
@@ -139,7 +145,9 @@ services:
       - postgres
 
   order-service:
-    build: ./order-service
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
     container_name: order_service
     restart: always
     environment:
@@ -153,7 +161,9 @@ services:
       - postgres
 
   cart-service:
-    build: ./cart-service
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
     container_name: cart_service
     restart: always
     environment:
@@ -170,7 +180,9 @@ services:
       - redis
 
   payment-service:
-    build: ./payment-service
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
     container_name: payment_service
     restart: always
     environment:
@@ -186,7 +198,9 @@ services:
       - kafka
 
   review-service:
-    build: ./review-service
+    build:
+      context: ./review-service
+      dockerfile: Dockerfile
     container_name: review_service
     restart: always
     environment:
@@ -196,11 +210,14 @@ services:
       DATABASE_PASSWORD: test123
       DATABASE_NAME: ecommerce
       DATABASE_PORT: 5432
+      KAFKA_BROKER: kafka:9092
     depends_on:
       - postgres
 
   inventory-service:
-    build: ./inventory-service
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
     container_name: inventory_service
     restart: always
     environment:
@@ -216,7 +233,9 @@ services:
       - kafka
 
   message-broker:
-    build: ./message-broker
+    build:
+      context: ./message-broker
+      dockerfile: Dockerfile
     container_name: message_broker
     restart: always
     environment:

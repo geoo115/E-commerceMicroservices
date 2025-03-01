@@ -66,6 +66,7 @@ docker-compose up --build
 ecommerce-microservices/
 │── api-gateway/         # API Gateway (handles external requests)
 │   ├── main.go
+│   ├── handlers/   # (auth,cart,invontory,order,payment,product,review)
 │   ├── router/
 │   ├── middlewares/
 │   ├── config.yaml
@@ -74,6 +75,7 @@ ecommerce-microservices/
 │
 ├── auth-service/        # Authentication Service (User Management & JWT)
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/           # gRPC proto definitions
@@ -84,6 +86,7 @@ ecommerce-microservices/
 │
 ├── product-service/     # Product & Category Management
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
@@ -93,6 +96,7 @@ ecommerce-microservices/
 │
 ├── order-service/       # Orders & Order Items
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
@@ -102,6 +106,7 @@ ecommerce-microservices/
 │
 ├── cart-service/        # Cart Management
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
@@ -111,6 +116,7 @@ ecommerce-microservices/
 │
 ├── payment-service/     # Payment Handling
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
@@ -120,6 +126,7 @@ ecommerce-microservices/
 │
 ├── review-service/      # Wishlist & Reviews
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
@@ -129,6 +136,7 @@ ecommerce-microservices/
 │
 ├── inventory-service/   # Product Inventory
 │   ├── main.go
+│   ├── cashe/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
