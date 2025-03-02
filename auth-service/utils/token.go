@@ -1,3 +1,4 @@
+// utils/jwt.go
 package utils
 
 import (
@@ -10,15 +11,19 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Claims struct for JWT
+// JWT Token
 type Claims struct {
 	UserID uint   `json:"user_id"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-// GenerateToken creates a JWT token for authentication
 func GenerateToken(user models.User) (string, error) {
+	secretKey := os.Getenv("JWT_SECRET")
+	if secretKey == "" {
+		return "", errors.New("JWT_SECRET environment variable not set")
+	}
+
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserID: user.ID,
@@ -29,33 +34,30 @@ func GenerateToken(user models.User) (string, error) {
 		},
 	}
 
-	// Fetch JWT secret key from environment variables
-	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		return "", errors.New("JWT_SECRET is not set")
-	}
-
-	// Create token with claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secretKey))
 }
 
-// ValidateToken verifies a JWT and extracts claims
 func ValidateToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
-
-	// Fetch JWT secret key from environment variables
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
-		return nil, errors.New("JWT_SECRET is not set")
+		return nil, errors.New("JWT_SECRET environment variable not set")
 	}
 
-	// Parse token with claims
+	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
 		return []byte(secretKey), nil
 	})
 
-	if err != nil || !token.Valid {
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
 		return nil, errors.New("invalid token")
 	}
 

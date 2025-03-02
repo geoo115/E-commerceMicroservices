@@ -11,24 +11,33 @@ import (
 
 var RedisClient *redis.Client
 
-// InitRedis initializes the Redis client.
 func InitRedis() *redis.Client {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		addr = "localhost:6379"
+	host := os.Getenv("REDIS_HOST")
+	if host == "" {
+		host = "localhost"
 	}
+
+	port := os.Getenv("REDIS_PORT")
+	if port == "" {
+		port = "6379"
+	}
+
+	addr := host + ":" + port
+	log.Printf("🔍 Redis Address: %s", addr) // Debug log
+
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: os.Getenv("REDIS_PASSWORD"), // leave empty if not set
+		Password: "",
 		DB:       0,
 	})
 
-	// Test Redis connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Fatalf("❌ Failed to connect to Redis at %s: %v", addr, err)
 	}
-	log.Println("✅ Redis connected successfully")
+
+	log.Printf("✅ Connected to Redis at %s", addr)
 	return RedisClient
 }

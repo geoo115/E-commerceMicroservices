@@ -1,3 +1,4 @@
+// db/database.go
 package db
 
 import (
@@ -6,56 +7,48 @@ import (
 	"os"
 
 	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-// InitDB initializes the database connection
 func InitDB() (*gorm.DB, error) {
-	// Ensure all required environment variables are set
-	requiredVars := []string{"DATABASE_HOST", "DATABASE_USER", "DATABASE_PASSWORD", "DATABASE_NAME", "DATABASE_PORT", "DATABASE_SSLMODE"}
-	for _, v := range requiredVars {
-		if os.Getenv(v) == "" {
-			log.Fatalf("Missing required environment variable: %s", v)
-		}
-	}
-
-	// Use DATABASE_SSLMODE from environment variables
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_NAME"),
-		os.Getenv("DATABASE_PORT"),
-		os.Getenv("DATABASE_SSLMODE"), // Dynamically include sslmode
+		GetEnv("DATABASE_HOST", "localhost"),
+		GetEnv("DATABASE_USER", "postgres"),
+		GetEnv("DATABASE_PASSWORD", "password"),
+		GetEnv("DATABASE_NAME", "ecommerce"),
+		GetEnv("DATABASE_PORT", "5432"),
+		GetEnv("DATABASE_SSLMODE", "disable"),
 	)
-
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
-
 	DB = db
 
-	// Run migrations
+	// Migrate models
 	if err := db.AutoMigrate(&models.User{}, &models.Address{}); err != nil {
-		log.Fatalf("Database migration error: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("database migration error: %w", err)
 	}
 
-	log.Println("✅ Database connected successfully")
+	log.Println("✅ Database connected and migrated")
 	return db, nil
 }
 
 func CloseDB() {
-	sqlDB, err := DB.DB()
-	if err != nil {
-		log.Fatal("Failed to get database instance")
+	if sqlDB, err := DB.DB(); err == nil {
+		sqlDB.Close()
+	} else {
+		log.Fatal("Failed to close database connection")
 	}
-	sqlDB.Close()
+}
+
+func GetEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }

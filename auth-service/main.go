@@ -1,7 +1,7 @@
+// main.go
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -10,38 +10,42 @@ import (
 	"github.com/geoo115/E-commerceMicroservices/auth-service/db"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/services"
-
 	"github.com/joho/godotenv"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	// Load environment variables.
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found, using system environment variables")
+	// Load environment variables from .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading it. Using environment variables.")
 	}
 
-	// Initialize the database.
-	_, err = db.InitDB()
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+	// Initialize database
+	if _, err := db.InitDB(); err != nil {
+		log.Fatalf("Failed to initialize DB: %v", err)
 	}
-	defer db.CloseDB()
 
-	// Initialize Redis.
-	cache.InitRedis()
+	// Initialize Redis
+	if redisClient := cache.InitRedis(); redisClient == nil {
+		log.Fatalf("Failed to initialize Redis")
+	}
 
-	// Determine gRPC server port.
+	// Create admin user if it doesn't exist
+	services.CreateAdminIfNotExists()
+
+	// Set up gRPC server
 	port := os.Getenv("AUTH_SERVICE_PORT")
 	if port == "" {
-		port = "50051"
+		port = ":50051"
+	} else if port[0] != ':' {
+		port = ":" + port
 	}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	listener, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("Failed to listen on port %s: %v", port, err)
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -50,6 +54,6 @@ func main() {
 
 	log.Printf("🚀 Auth gRPC server running on port %s", port)
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Failed to start gRPC server: %v", err)
+		log.Fatalf("Failed to serve: %v", err)
 	}
 }

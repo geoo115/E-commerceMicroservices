@@ -1,11 +1,11 @@
+// services/auth_service.go
 package services
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/geoo115/E-commerceMicroservices/auth-service/cache"
@@ -13,112 +13,129 @@ import (
 	"github.com/geoo115/E-commerceMicroservices/auth-service/models"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/auth-service/utils"
-
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
-// AuthServer implements the gRPC AuthService interface.
 type AuthServer struct {
 	proto.UnimplementedAuthServiceServer
 }
 
-// NewAuthServer returns a new AuthServer instance.
 func NewAuthServer() *AuthServer {
 	return &AuthServer{}
 }
 
-// Signup registers a new user and creates an associated address record if provided.
-func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.AuthResponse, error) {
-	// Validate required fields.
-	if req.Username == "" || req.Password == "" || req.Email == "" || req.Phone == "" {
-		return nil, fmt.Errorf("username, password, email, and phone are required")
-	}
-
-	// Check if the user already exists.
+func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.GenericResponse, error) {
 	var existing models.User
-	result := db.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existing)
-	if result.Error == nil {
-		return nil, fmt.Errorf("username or email already exists")
-	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		log.Printf("Database error: %v", result.Error)
-		return nil, fmt.Errorf("internal server error")
+	if err := db.DB.Where("username = ? OR email = ? OR phone = ?", req.GetUsername(), req.GetEmail(), req.GetPhone()).First(&existing).Error; err == nil {
+		return nil, status.Errorf(codes.AlreadyExists, "User already exists")
+	} else if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("Error checking user existence: %v", err)
+		return nil, status.Errorf(codes.Internal, "Error checking user existence")
 	}
 
-	// Hash the password.
-	hashedPassword, err := utils.HashPassword(req.Password)
+	hashedPassword, err := utils.HashPassword(req.GetPassword())
 	if err != nil {
-		log.Printf("Password hashing error: %v", err)
-		return nil, fmt.Errorf("internal server error")
+		log.Printf("Error hashing password: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to hash password")
 	}
 
-	// Create the new user.
 	user := models.User{
-		Username: req.Username,
+		Username: req.GetUsername(),
 		Password: hashedPassword,
-		Email:    req.Email,
-		Phone:    req.Phone,
-		Role:     "customer", // Default role.
+		Email:    req.GetEmail(),
+		Phone:    req.GetPhone(),
+		Role:     "customer",
+		IsActive: false,
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
-		log.Printf("User creation error: %v", err)
-		return nil, fmt.Errorf("internal server error")
+		log.Printf("Error creating user: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to create user")
 	}
 
-	// If address details are provided, create an address record.
-	if req.Address != "" && req.City != "" && req.PostCode != "" {
+	// Create address if provided
+	if req.GetAddress() != "" {
 		address := models.Address{
 			UserID:   user.ID,
-			Address:  req.Address,
-			City:     req.City,
-			PostCode: req.PostCode,
+			Address:  req.GetAddress(),
+			City:     req.GetCity(),
+			PostCode: req.GetPostCode(),
 		}
+
 		if err := db.DB.Create(&address).Error; err != nil {
-			log.Printf("Address creation error: %v", err)
-			// You can decide whether to treat this as fatal or simply log the error.
+			log.Printf("Error creating address: %v", err)
+			// Continue even if address creation fails
 		}
 	}
 
-	// Generate a JWT token.
-	token, err := utils.GenerateToken(user)
+	// Send email verification
+	verificationCode := fmt.Sprintf("%06d", time.Now().UnixNano()%1000000)
+	err = cache.RedisClient.Set(ctx, fmt.Sprintf("verify:%s", user.Email), verificationCode, 10*time.Minute).Err()
 	if err != nil {
-		log.Printf("Token generation error: %v", err)
-		return nil, fmt.Errorf("internal server error")
+		log.Printf("Error saving verification code to Redis: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to save verification code")
 	}
 
-	// Cache the token in Redis.
-	cache.RedisClient.Set(ctx, fmt.Sprintf("auth_token:%s", token), user.ID, 24*time.Hour)
+	// TODO: Send actual email with verification code
+	log.Printf("Verification code for %s: %s", user.Email, verificationCode)
 
-	return &proto.AuthResponse{
-		UserId:      uint64(user.ID),
-		AccessToken: token,
-		Username:    user.Username,
-		Email:       user.Email,
-	}, nil
+	return &proto.GenericResponse{Message: "Signup successful. Please verify your email"}, nil
 }
 
-// Login authenticates a user and returns a JWT token.
+// Verify Email
+func (s *AuthServer) VerifyEmail(ctx context.Context, req *proto.VerifyEmailRequest) (*proto.GenericResponse, error) {
+	code, err := cache.RedisClient.Get(ctx, fmt.Sprintf("verify:%s", req.GetEmail())).Result()
+	if err != nil {
+		log.Printf("Error retrieving verification code: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid or expired verification code")
+	}
+
+	if code != req.GetCode() {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid verification code")
+	}
+
+	result := db.DB.Model(&models.User{}).Where("email = ?", req.GetEmail()).Update("is_active", true)
+	if result.Error != nil {
+		log.Printf("Error updating user: %v", result.Error)
+		return nil, status.Errorf(codes.Internal, "Failed to verify email")
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "User not found")
+	}
+
+	// Delete the verification code from Redis
+	cache.RedisClient.Del(ctx, fmt.Sprintf("verify:%s", req.GetEmail()))
+
+	return &proto.GenericResponse{Message: "Email verified successfully"}, nil
+}
+
+// Login
 func (s *AuthServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.AuthResponse, error) {
 	var user models.User
-	if err := db.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("invalid credentials")
+	if err := db.DB.Where("username = ?", req.GetUsername()).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, status.Errorf(codes.NotFound, "User not found")
 		}
-		log.Printf("Database error: %v", err)
-		return nil, fmt.Errorf("internal server error")
+		log.Printf("Database error during login: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to retrieve user")
 	}
 
-	if !utils.CheckPasswordHash(req.Password, user.Password) {
-		return nil, fmt.Errorf("invalid credentials")
+	if !user.IsActive {
+		return nil, status.Errorf(codes.PermissionDenied, "Email verification required")
+	}
+
+	if !utils.CheckPasswordHash(req.GetPassword(), user.Password) {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid credentials")
 	}
 
 	token, err := utils.GenerateToken(user)
 	if err != nil {
-		log.Printf("Token generation error: %v", err)
-		return nil, fmt.Errorf("internal server error")
+		log.Printf("Error generating token: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to generate token")
 	}
-
-	cache.RedisClient.Set(ctx, fmt.Sprintf("auth_token:%s", token), user.ID, 24*time.Hour)
 
 	return &proto.AuthResponse{
 		UserId:      uint64(user.ID),
@@ -128,32 +145,12 @@ func (s *AuthServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 	}, nil
 }
 
-// ValidateToken checks if a JWT token is valid using Redis caching.
+// ValidateToken implements the token validation endpoint
 func (s *AuthServer) ValidateToken(ctx context.Context, req *proto.ValidateTokenRequest) (*proto.ValidateResponse, error) {
-	// Check Redis first.
-	cached, err := cache.RedisClient.Get(ctx, fmt.Sprintf("auth_token:%s", req.Token)).Result()
-	if err == nil && cached != "" {
-		var userID uint64
-		_, err := fmt.Sscanf(cached, "%d", &userID)
-		if err == nil {
-			// For simplicity, we assume role "customer" here.
-			return &proto.ValidateResponse{
-				IsValid: true,
-				UserId:  userID,
-				Role:    "customer",
-			}, nil
-		}
-	}
-
-	// Otherwise, validate the token using JWT.
-	claims, err := utils.ValidateToken(req.Token)
+	claims, err := utils.ValidateToken(req.GetToken())
 	if err != nil {
+		log.Printf("Token validation error: %v", err)
 		return &proto.ValidateResponse{IsValid: false}, nil
-	}
-
-	// Cache the result.
-	if _, err := json.Marshal(claims); err == nil {
-		cache.RedisClient.Set(ctx, fmt.Sprintf("auth_token:%s", req.Token), claims.UserID, 24*time.Hour)
 	}
 
 	return &proto.ValidateResponse{
@@ -161,4 +158,48 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *proto.ValidateToken
 		UserId:  uint64(claims.UserID),
 		Role:    claims.Role,
 	}, nil
+}
+
+func CreateAdminIfNotExists() {
+	var admin models.User
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminPhone := os.Getenv("ADMIN_PHONE")
+
+	if adminEmail == "" || adminPassword == "" {
+		log.Println("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not set. Skipping admin creation.")
+		return
+	}
+
+	if adminPhone == "" {
+		adminPhone = "00000000" // Default phone number if not provided
+	}
+
+	// Check if an admin user already exists
+	result := db.DB.Where("email = ? AND role = ?", adminEmail, "admin").First(&admin)
+	if result.Error == nil {
+		log.Println("✅ Admin user already exists. Skipping creation.")
+		return
+	}
+
+	// Create new admin user
+	hashedPassword, err := utils.HashPassword(adminPassword)
+	if err != nil {
+		log.Fatalf("❌ Failed to hash admin password: %v", err)
+	}
+
+	newAdmin := models.User{
+		Username: "admin",
+		Email:    adminEmail,
+		Phone:    adminPhone,
+		Password: hashedPassword,
+		Role:     "admin",
+		IsActive: true, // Admin is always active
+	}
+
+	if err := db.DB.Create(&newAdmin).Error; err != nil {
+		log.Fatalf("❌ Failed to create admin user: %v", err)
+	} else {
+		log.Println("✅ Admin user created successfully")
+	}
 }
