@@ -34,6 +34,10 @@ func SetupRouter() *gin.Engine {
 		productGroup.PUT("/:id", handlers.UpdateProduct)
 		productGroup.DELETE("/:id", handlers.DeleteProduct)
 	}
+	categoryGroup := router.Group("/api/v1/category")
+	{
+		categoryGroup.POST("/", handlers.CreateCategory)
+	}
 
 	// Order routes
 	orderGroup := router.Group("/api/v1/order")

@@ -11,7 +11,8 @@ import (
 	"github.com/geoo115/E-commerceMicroservices/product-service/db"
 	"github.com/geoo115/E-commerceMicroservices/product-service/models"
 	"github.com/geoo115/E-commerceMicroservices/product-service/proto"
-	"gorm.io/gorm"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ProductServer struct {
@@ -192,14 +193,11 @@ func convertToProtoProduct(p models.Product) *proto.ProductResponse {
 	}
 }
 
-type ProductService struct {
-	DB *gorm.DB
-}
-
-func (s *ProductService) CreateCategory(ctx context.Context, req *proto.CreateCategoryRequest) (*proto.CategoryResponse, error) {
+// Add this method to ProductServer struct
+func (s *ProductServer) CreateCategory(ctx context.Context, req *proto.CreateCategoryRequest) (*proto.CategoryResponse, error) {
 	category := models.Category{Name: req.Name}
-	if err := s.DB.Create(&category).Error; err != nil {
-		return nil, err
+	if err := db.DB.Create(&category).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create category: %v", err)
 	}
 
 	return &proto.CategoryResponse{

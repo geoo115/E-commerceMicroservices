@@ -11,6 +11,8 @@ import (
 	"github.com/geoo115/E-commerceMicroservices/order-service/db"
 	"github.com/geoo115/E-commerceMicroservices/order-service/models"
 	pb "github.com/geoo115/E-commerceMicroservices/order-service/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // OrderServer implements the gRPC OrderService.
@@ -114,4 +116,40 @@ func (s *OrderServer) UpdateOrderStatus(ctx context.Context, req *pb.UpdateOrder
 	}
 
 	return s.getOrderResponse(order.ID)
+}
+
+func (s *OrderServer) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.OrderResponse, error) {
+	var order models.Order
+	// Convert uint64 to uint for GORM
+	orderID := uint(req.OrderId)
+
+	// Explicit WHERE clause
+	if err := db.DB.Preload("Items").
+		Where("id = ?", orderID).
+		First(&order).Error; err != nil {
+
+		return nil, status.Errorf(codes.NotFound, "order not found")
+	}
+
+	return convertToOrderResponse(order), nil
+}
+
+func convertToOrderResponse(o models.Order) *pb.OrderResponse {
+	items := make([]*pb.OrderItemResponse, len(o.Items))
+	for i, item := range o.Items {
+		items[i] = &pb.OrderItemResponse{
+			OrderItemId: uint64(item.ID),
+			ProductId:   uint64(item.ProductID),
+			Quantity:    int32(item.Quantity),
+			Price:       item.Price,
+		}
+	}
+
+	return &pb.OrderResponse{
+		OrderId:     uint64(o.ID),
+		UserId:      uint64(o.UserID),
+		TotalAmount: o.TotalAmount,
+		Status:      o.Status,
+		Items:       items,
+	}
 }

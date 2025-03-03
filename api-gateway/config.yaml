@@ -1,23 +1,23 @@
 server:
   port: "8080"
 
-auth_service:
-  address: "auth_service:50051"
+auth-service:
+  address: "auth-service:50051"
 
-product_service:
-  address: "product_service:50052"
+product-service:
+  address: "product-service:50052"
 
-order_service:
-  address: "order_service:50053"
+order-service:
+  address: "order-service:50053"
 
-cart_service:
-  address: "cart_service:50054"
+cart-service:
+  address: "cart-service:50054"
 
-payment_service:
-  address: "payment_service:50055"
+payment-service:
+  address: "payment-service:50055"
 
-review_service:
-  address: "review_service:50056"
+review-service:
+  address: "review-service:50056"
 
-inventory_service:
-  address: "inventory_service:50057"
+inventory-service:
+  address: "inventory-service:50057"

@@ -14,7 +14,7 @@ import (
 )
 
 func getProductServiceClient() (pb.ProductServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("product_service.address")
+	addr := viper.GetString("product-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err
@@ -61,6 +61,30 @@ func CreateProduct(c *gin.Context) {
 	defer conn.Close()
 
 	resp, err := client.CreateProduct(context.Background(), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func CreateCategory(c *gin.Context) {
+	// CORRECT REQUEST TYPE
+	var req pb.CreateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	client, conn, err := getProductServiceClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to product service"})
+		return
+	}
+	defer conn.Close()
+
+	// USE THE PROPER REQUEST STRUCT
+	resp, err := client.CreateCategory(context.Background(), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

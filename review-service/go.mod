@@ -15,8 +15,6 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-replace github.com/geoo115/E-commerceMicroservices/message-broker => ../message-broker
-
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0 // indirect

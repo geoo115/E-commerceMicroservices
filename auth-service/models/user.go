@@ -10,7 +10,7 @@ type User struct {
 	Phone    string    `gorm:"unique;not null"`
 	Password string    `gorm:"not null"`
 	Role     string    `gorm:"default:'customer'"`
-	IsActive bool      `gorm:"default:false"`
+	IsActive bool      `gorm:"default:true"`
 	Address  []Address `gorm:"foreignKey:UserID"`
 }
 

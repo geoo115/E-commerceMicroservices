@@ -1,24 +1,28 @@
-# Build Stage
-FROM golang:1.23.6-alpine AS builder
+# review-service Dockerfile
+FROM golang:1.24-bullseye AS builder
+ENV CGO_ENABLED=1
 
-RUN apk update && apk add --no-cache git
+RUN apt-get update && apt-get install -y \
+    git \
+    librdkafka-dev \
+    pkg-config \
+    build-essential
 
 WORKDIR /app
 
+# Copy module files first
 COPY go.mod go.sum ./
+
+# Install dependencies
 RUN go mod download
 
-# If review-service uses message-broker for publishing events, copy the module:
-COPY ../message-broker ./message-broker
-
-# Copy source code
+# Copy service code
 COPY . .
 
-# Build the binary
+# Build
 RUN go build -o review-service .
 
-# Final Stage
-FROM alpine:latest
+FROM debian:bullseye-slim
 WORKDIR /root/
 COPY --from=builder /app/review-service .
 EXPOSE 50056

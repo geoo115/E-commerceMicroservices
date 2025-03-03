@@ -18,16 +18,13 @@ import (
 
 func main() {
 	// Load environment variables from .env file if it exists
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Println("No .env file found or error loading it. Using environment variables.")
 	}
 
-	// Initialize database
 	if _, err := db.InitDB(); err != nil {
 		log.Fatalf("Failed to initialize DB: %v", err)
 	}
-
-	// Initialize Redis
 	if redisClient := cache.InitRedis(); redisClient == nil {
 		log.Fatalf("Failed to initialize Redis")
 	}

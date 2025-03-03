@@ -40,8 +40,14 @@ func InitDB() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto-migrate models.
-	if err = DB.AutoMigrate(&models.Inventory{}, &models.Product{}, &models.Category{}, &models.Order{}, &models.OrderItem{}); err != nil {
+	// Auto-migrate models in the correct order.
+	if err = DB.AutoMigrate(
+		&models.Category{},  // Migrate Category first (since Product references it)
+		&models.Product{},   // Then Product (since Inventory references it)
+		&models.Inventory{}, // Now Inventory (depends on Product)
+		&models.Order{},
+		&models.OrderItem{},
+	); err != nil {
 		log.Fatalf("Failed to auto-migrate models: %v", err)
 	}
 

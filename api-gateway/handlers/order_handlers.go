@@ -15,7 +15,7 @@ import (
 
 // getOrderServiceClient establishes a gRPC connection to the order service.
 func getOrderServiceClient() (pbOrder.OrderServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("order_service.address")
+	addr := viper.GetString("order-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err

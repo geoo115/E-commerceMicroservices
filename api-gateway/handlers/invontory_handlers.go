@@ -15,7 +15,7 @@ import (
 
 // getInventoryServiceClient establishes a gRPC connection to the inventory service.
 func getInventoryServiceClient() (pbInventory.InventoryServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("inventory_service.address")
+	addr := viper.GetString("inventory-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err

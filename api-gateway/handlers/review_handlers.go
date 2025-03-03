@@ -15,7 +15,7 @@ import (
 
 // getReviewServiceClient establishes a gRPC connection to the review service.
 func getReviewServiceClient() (pbReview.ReviewServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("review_service.address")
+	addr := viper.GetString("review-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err

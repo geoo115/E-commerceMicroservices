@@ -66,7 +66,7 @@ docker-compose up --build
 ecommerce-microservices/
 │── api-gateway/         # API Gateway (handles external requests)
 │   ├── main.go
-│   ├── handlers/   # (auth,cart,invontory,order,payment,product,review)
+│   ├── handlers/        # (auth, cart, inventory, order, payment, product, review)
 │   ├── router/
 │   ├── middlewares/
 │   ├── config.yaml
@@ -75,72 +75,79 @@ ecommerce-microservices/
 │
 ├── auth-service/        # Authentication Service (User Management & JWT)
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/           # gRPC proto definitions
 │   ├── services/
 │   ├── utils/
+│   ├── tests/           # Unit, integration, and API tests
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── product-service/     # Product & Category Management
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── order-service/       # Orders & Order Items
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── cart-service/        # Cart Management
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── payment-service/     # Payment Handling
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── review-service/      # Wishlist & Reviews
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
 ├── inventory-service/   # Product Inventory
 │   ├── main.go
-│   ├── cashe/
+│   ├── cache/
 │   ├── models/
 │   ├── db/
 │   ├── proto/
 │   ├── services/
+│   ├── tests/
 │   ├── Dockerfile
 │   └── go.mod
 │
@@ -149,10 +156,56 @@ ecommerce-microservices/
 │   ├── topics/
 │   ├── consumers/
 │   ├── producers/
+│   ├── event-schemas/   # Schema definitions for events
 │   ├── Dockerfile
 │   └── go.mod
 │
+├── shared/              # Shared libraries and utilities
+│   ├── logging/
+│   ├── errors/
+│   ├── tracing/
+│   ├── monitoring/
+│   ├── constants/
+│   ├── validation/
+│   └── go.mod
+│
+├── service-discovery/   # Service registry and discovery
+│   ├── main.go
+│   ├── registry/
+│   ├── Dockerfile
+│   └── go.mod
+│
+├── monitoring/          # Monitoring and observability
+│   ├── prometheus/
+│   ├── grafana/
+│   ├── jaeger/
+│   ├── alerts/
+│   ├── dashboards/
+│   └── docker-compose.yml
+│
+├── deployment/          # Deployment configurations
+│   ├── kubernetes/
+│   │   ├── base/
+│   │   └── overlays/
+│   │       ├── dev/
+│   │       ├── staging/
+│   │       └── prod/
+│   ├── terraform/
+│   └── scripts/
+│
+├── docs/                # Documentation
+│   ├── api/
+│   ├── architecture/
+│   ├── development/
+│   └── operations/
+│
+├── scripts/             # Helper scripts
+│   ├── setup.sh
+│   ├── build-all.sh
+│   └── reset-dev.sh
+│
 ├── docker-compose.yml   # Compose file for microservices setup
+├── docker-compose.dev.yml  # Development environment specifics
 ├── Makefile             # Automation scripts
 └── README.md            # Documentation
 ```

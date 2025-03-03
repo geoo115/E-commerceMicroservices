@@ -16,13 +16,23 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U usr -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
     container_name: redis_cache
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
+    networks:
+      - ecommerce-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -30,6 +40,13 @@ services:
     restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -42,8 +59,16 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "9092:9092"
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server=kafka:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # ======================
   # Monitoring & Observability
@@ -57,11 +82,11 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - ecommerce-net
     depends_on:
       - api-gateway
       - auth-service
-      - product-service
-      - order-service
 
   grafana:
     image: grafana/grafana:latest
@@ -70,6 +95,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+    networks:
+      - ecommerce-net
     depends_on:
       - prometheus
 
@@ -79,6 +106,8 @@ services:
     ports:
       - "16686:16686"
       - "6831:6831/udp"
+    networks:
+      - ecommerce-net
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -88,6 +117,8 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - kafka
 
@@ -102,31 +133,47 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    depends_on:
-      - auth-service
-      - product-service
-      - order-service
     environment:
       CONFIG_PATH: /app/config.yaml
     volumes:
       - ./api-gateway/config.yaml:/app/config.yaml
+    networks:
+      - ecommerce-net
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
 
   auth-service:
     build:
-      context: ./auth-service 
+      context: ./auth-service
       dockerfile: Dockerfile
     container_name: auth_service
     restart: always
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: postgres_db
       DATABASE_USER: usr
       DATABASE_PASSWORD: test123
       DATABASE_SSLMODE: disable
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_users
       DATABASE_PORT: 5432
       JWT_SECRET: "supersecretkey"
+      REDIS_HOST: redis_cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+      ADMIN_EMAIL: admin@example.com 
+      ADMIN_PASSWORD: supersecurepassword  
+    ports:
+      - "50051:50051"
+    networks:
+      - ecommerce-net
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
 
   product-service:
     build:
@@ -139,10 +186,13 @@ services:
       DATABASE_USER: usr
       DATABASE_PASSWORD: test123
       DATABASE_SSLMODE: disable
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_products
       DATABASE_PORT: 5432
+    networks:
+      - ecommerce-net
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   order-service:
     build:
@@ -155,10 +205,14 @@ services:
       DATABASE_USER: usr
       DATABASE_SSLMODE: disable
       DATABASE_PASSWORD: test123
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_order
       DATABASE_PORT: 5432
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - postgres
+      - kafka
 
   cart-service:
     build:
@@ -171,18 +225,20 @@ services:
       DATABASE_USER: usr
       DATABASE_SSLMODE: disable
       DATABASE_PASSWORD: test123
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_cart
       DATABASE_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    networks:
+      - ecommerce-net
     depends_on:
       - postgres
       - redis
 
   payment-service:
     build:
-      context: ./payment-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./payment-service/Dockerfile
     container_name: payment_service
     restart: always
     environment:
@@ -190,9 +246,11 @@ services:
       DATABASE_USER: usr
       DATABASE_SSLMODE: disable
       DATABASE_PASSWORD: test123
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_payment
       DATABASE_PORT: 5432
       KAFKA_BROKER: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - postgres
       - kafka
@@ -208,11 +266,14 @@ services:
       DATABASE_USER: usr
       DATABASE_SSLMODE: disable
       DATABASE_PASSWORD: test123
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_review
       DATABASE_PORT: 5432
       KAFKA_BROKER: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - postgres
+      - kafka
 
   inventory-service:
     build:
@@ -225,9 +286,11 @@ services:
       DATABASE_USER: usr
       DATABASE_SSLMODE: disable
       DATABASE_PASSWORD: test123
-      DATABASE_NAME: ecommerce
+      DATABASE_NAME: ecommerce_inventory
       DATABASE_PORT: 5432
       KAFKA_BROKER: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - postgres
       - kafka
@@ -240,12 +303,18 @@ services:
     restart: always
     environment:
       KAFKA_BROKER: kafka:9092
+    networks:
+      - ecommerce-net
     depends_on:
       - kafka
 
 # ======================
-# Volumes
+# Volumes & Networks
 # ======================
 volumes:
   postgres_data:
   grafana_data:
+
+networks:
+  ecommerce-net:
+    driver: bridge

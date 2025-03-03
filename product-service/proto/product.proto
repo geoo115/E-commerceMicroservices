@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package product;
 
-option go_package = "github.com/geoo115/E-commerceMicroservices/product-service/proto";
+option go_package = "../proto";
 
 service ProductService {
     rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
@@ -11,7 +11,7 @@ service ProductService {
     rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
     rpc DeleteProduct(DeleteProductRequest) returns (DeleteResponse);
     rpc SearchProducts(SearchRequest) returns (ListProductsResponse);
-    rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse);
+    rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse); 
 }
 
 message CreateProductRequest {

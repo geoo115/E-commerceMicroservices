@@ -30,7 +30,7 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 	var existing models.User
 	if err := db.DB.Where("username = ? OR email = ? OR phone = ?", req.GetUsername(), req.GetEmail(), req.GetPhone()).First(&existing).Error; err == nil {
 		return nil, status.Errorf(codes.AlreadyExists, "User already exists")
-	} else if err != nil && err != gorm.ErrRecordNotFound {
+	} else if err != gorm.ErrRecordNotFound {
 		log.Printf("Error checking user existence: %v", err)
 		return nil, status.Errorf(codes.Internal, "Error checking user existence")
 	}
@@ -55,7 +55,9 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 		return nil, status.Errorf(codes.Internal, "Failed to create user")
 	}
 
-	// Create address if provided
+	log.Printf("Signup Request received: Username=%s, Email=%s, Address=%s, City=%s, PostCode=%s",
+		req.GetUsername(), req.GetEmail(), req.GetAddress(), req.GetCity(), req.GetPostCode())
+
 	if req.GetAddress() != "" {
 		address := models.Address{
 			UserID:   user.ID,
@@ -65,8 +67,11 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 		}
 
 		if err := db.DB.Create(&address).Error; err != nil {
-			log.Printf("Error creating address: %v", err)
-			// Continue even if address creation fails
+			log.Printf("Error creating address for user %d: %v", user.ID, err)
+			// You might want to return the error instead of continuing
+		} else {
+			log.Printf("Address created successfully for user %d: %s, %s, %s",
+				user.ID, address.Address, address.City, address.PostCode)
 		}
 	}
 

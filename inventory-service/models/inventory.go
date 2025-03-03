@@ -16,7 +16,7 @@ type Product struct {
 	Price      float64   `json:"price"`
 	CategoryID uint      `json:"category_id"`
 	Category   Category  `json:"-" gorm:"foreignKey:CategoryID;constraint:OnDelete:CASCADE;"`
-	Inventory  Inventory `json:"-" gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE;"`
+	Inventory  Inventory `json:"-" gorm:"foreignKey:ProductID;references:ID;constraint:OnDelete:CASCADE;"`
 }
 
 // Category represents a product category.

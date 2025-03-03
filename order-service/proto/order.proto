@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package order;
 
-option go_package = "./proto";
+option go_package = "github.com/geoo115/E-commerce/order-service/proto/order";
 
 // OrderService defines the order operations.
 service OrderService {

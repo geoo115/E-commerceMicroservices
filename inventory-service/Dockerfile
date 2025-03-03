@@ -1,21 +1,28 @@
-# Build Stage
-FROM golang:1.23.6-alpine AS builder
+# inventory-service Dockerfile
+FROM golang:1.24-bullseye AS builder
+ENV CGO_ENABLED=1
 
-RUN apk update && apk add --no-cache git
+RUN apt-get update && apt-get install -y \
+    git \
+    librdkafka-dev \
+    pkg-config \
+    build-essential
 
 WORKDIR /app
 
+# Copy module files first
 COPY go.mod go.sum ./
+
+# Install dependencies
 RUN go mod download
 
-# Copy source code
+# Copy service code
 COPY . .
 
-# Build the binary
+# Build
 RUN go build -o inventory-service .
 
-# Final Stage
-FROM alpine:latest
+FROM debian:bullseye-slim
 WORKDIR /root/
 COPY --from=builder /app/inventory-service .
 EXPOSE 50057

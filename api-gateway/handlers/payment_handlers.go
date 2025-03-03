@@ -15,7 +15,7 @@ import (
 
 // getPaymentServiceClient establishes a gRPC connection to the payment service.
 func getPaymentServiceClient() (pbPayment.PaymentServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("payment_service.address")
+	addr := viper.GetString("payment-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err

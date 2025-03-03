@@ -17,9 +17,9 @@ func InitDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		GetEnv("DATABASE_HOST", "localhost"),
-		GetEnv("DATABASE_USER", "postgres"),
-		GetEnv("DATABASE_PASSWORD", "password"),
-		GetEnv("DATABASE_NAME", "ecommerce"),
+		GetEnv("DATABASE_USER", "usr"),
+		GetEnv("DATABASE_PASSWORD", "test123"),
+		GetEnv("DATABASE_NAME", "ecommerce_users"),
 		GetEnv("DATABASE_PORT", "5432"),
 		GetEnv("DATABASE_SSLMODE", "disable"),
 	)

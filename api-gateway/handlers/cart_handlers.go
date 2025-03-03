@@ -15,7 +15,7 @@ import (
 
 // getCartServiceClient establishes a gRPC connection to the cart service.
 func getCartServiceClient() (pbCart.CartServiceClient, *grpc.ClientConn, error) {
-	addr := viper.GetString("cart_service.address")
+	addr := viper.GetString("cart-service.address")
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err

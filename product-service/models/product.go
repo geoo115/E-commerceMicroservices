@@ -15,7 +15,7 @@ type Product struct {
 	CategoryID  uint      `json:"category_id"`
 	Description string    `json:"description"`
 	Category    Category  `json:"category" gorm:"foreignKey:CategoryID"`
-	Inventory   Inventory `json:"inventory" gorm:"foreignKey:ProductID"`
+	Inventory   Inventory `json:"inventory" gorm:"foreignKey:ProductID;references:ID"`
 	Reviews     []Review  `json:"reviews" gorm:"foreignKey:ProductID"`
 }
 
@@ -23,7 +23,7 @@ type Inventory struct {
 	gorm.Model
 	ProductID uint     `json:"product_id"`
 	Stock     int      `json:"stock"`
-	Product   *Product `json:"-" gorm:"foreignKey:ProductID"` // Use pointer to break recursion
+	Product   *Product `json:"-" gorm:"foreignKey:ProductID;references:ID"`
 }
 
 type Review struct {
