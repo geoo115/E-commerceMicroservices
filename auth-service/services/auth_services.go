@@ -26,7 +26,7 @@ func NewAuthServer() *AuthServer {
 	return &AuthServer{}
 }
 
-func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.GenericResponse, error) {
+func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*proto.AuthResponse, error) {
 	var existing models.User
 	if err := db.DB.Where("username = ? OR email = ? OR phone = ?", req.GetUsername(), req.GetEmail(), req.GetPhone()).First(&existing).Error; err == nil {
 		return nil, status.Errorf(codes.AlreadyExists, "User already exists")
@@ -86,7 +86,11 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 	// TODO: Send actual email with verification code
 	log.Printf("Verification code for %s: %s", user.Email, verificationCode)
 
-	return &proto.GenericResponse{Message: "Signup successful. Please verify your email"}, nil
+	return &proto.AuthResponse{
+		UserId:   uint64(user.ID),
+		Username: req.GetUsername(),
+		Email:    req.GetEmail(),
+	}, nil
 }
 
 // Verify Email

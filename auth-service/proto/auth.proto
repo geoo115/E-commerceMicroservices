@@ -4,7 +4,7 @@ package auth;
 option go_package = "github.com/geoo115/E-commerceMicroservices/auth-service/proto";
 
 service AuthService {
-    rpc Signup(SignupRequest) returns (GenericResponse) {}
+    rpc Signup(SignupRequest) returns (AuthResponse) {}
     rpc VerifyEmail(VerifyEmailRequest) returns (GenericResponse) {}
     rpc Login(LoginRequest) returns (AuthResponse) {}
     rpc ValidateToken(ValidateTokenRequest) returns (ValidateResponse) {}

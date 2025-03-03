@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Helper function to create a gRPC client connection
+// getAuthServiceClient creates a gRPC client connection to the Auth service.
 func getAuthServiceClient() (pb.AuthServiceClient, *grpc.ClientConn, error) {
 	addr := viper.GetString("auth-service.address")
 	if addr == "" {
@@ -27,20 +27,18 @@ func getAuthServiceClient() (pb.AuthServiceClient, *grpc.ClientConn, error) {
 	return client, conn, nil
 }
 
-// Signup handler for creating a new user
+// Signup handles the user signup request.
 func Signup(c *gin.Context) {
 	var req pb.SignupRequest
-	// Bind incoming JSON request to SignupRequest struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("Signup request binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
-	// Log the incoming request for debugging purposes
-	log.Printf("Received signup request: %+v", req)
+	log.Printf("Signup Request received: Username=%s, Email=%s",
+		req.GetUsername(), req.GetEmail())
 
-	// Create gRPC client connection
 	client, conn, err := getAuthServiceClient()
 	if err != nil {
 		log.Printf("Error connecting to Auth service: %v", err)
@@ -57,27 +55,26 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	// Use only the fields available in GenericResponse
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": resp.Message, // Direct field access for GenericResponse
+		"success":  true,
+		"user_id":  resp.GetUserId(),
+		"username": resp.GetUsername(),
+		"email":    resp.GetEmail(),
+		"message":  "Signup successful. Please verify your email",
 	})
 }
 
-// Login handler for user authentication
+// Login handles user login.
 func Login(c *gin.Context) {
 	var req pb.LoginRequest
-	// Bind the incoming login request to LoginRequest struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("Login request binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
-	// Log the incoming request for debugging purposes
-	log.Printf("Received login request: %+v", req)
+	log.Printf("Received login request: Username=%s", req.Username)
 
-	// Create gRPC client connection
 	client, conn, err := getAuthServiceClient()
 	if err != nil {
 		log.Printf("Error connecting to Auth service: %v", err)
@@ -86,7 +83,6 @@ func Login(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	// Call the Login method on the Auth service
 	resp, err := client.Login(context.Background(), &req)
 	if err != nil {
 		log.Printf("Login error: %v", err)
@@ -94,7 +90,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Respond with the authentication token and user details
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":      resp.GetUserId(),
 		"username":     resp.GetUsername(),
@@ -103,20 +98,17 @@ func Login(c *gin.Context) {
 	})
 }
 
-// ValidateToken handler for validating the JWT token
+// ValidateToken handles token validation.
 func ValidateToken(c *gin.Context) {
 	var req pb.ValidateTokenRequest
-	// Bind incoming request to ValidateTokenRequest struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("ValidateToken request binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
-	// Log the incoming request for debugging purposes
-	log.Printf("Received validate token request: %+v", req)
+	log.Printf("Received validate token request: Token=%s", req.Token)
 
-	// Create gRPC client connection
 	client, conn, err := getAuthServiceClient()
 	if err != nil {
 		log.Printf("Error connecting to Auth service: %v", err)
@@ -125,7 +117,6 @@ func ValidateToken(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	// Call the ValidateToken method on the Auth service
 	resp, err := client.ValidateToken(context.Background(), &req)
 	if err != nil {
 		log.Printf("Token validation error: %v", err)
@@ -133,7 +124,6 @@ func ValidateToken(c *gin.Context) {
 		return
 	}
 
-	// Respond with token validation result
 	c.JSON(http.StatusOK, gin.H{
 		"is_valid": resp.GetIsValid(),
 		"user_id":  resp.GetUserId(),
