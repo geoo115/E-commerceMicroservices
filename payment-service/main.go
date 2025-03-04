@@ -10,25 +10,30 @@ import (
 	pb "github.com/geoo115/E-commerceMicroservices/payment-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/payment-service/services"
 
+	"github.com/geoo115/E-commerceMicroservices/message-broker/consumers"
+	"github.com/geoo115/E-commerceMicroservices/message-broker/topics"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	// Load environment variables from .env file.
 	if err := godotenv.Load(".env"); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	// Initialize the database.
 	db.InitDB()
 	defer db.CloseDB()
 
-	// Initialize Redis.
 	cache.InitRedis()
 
-	// Get the service port from environment variables.
+	// Optionally, start a consumer for order_placed events using the payment service's dedicated group.
+	go consumers.ConsumeEvents(topics.OrderPlaced, "payment-service-group", func(message []byte) {
+		log.Printf("Payment Service received order_placed event: %s", string(message))
+		// Process the event to initiate payment processing.
+		services.HandleOrderPlacedForPayment(message)
+	})
+
 	port := os.Getenv("PAYMENT_SERVICE_PORT")
 	if port == "" {
 		port = "50055"

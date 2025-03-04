@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,12 +21,11 @@ type PaymentServer struct {
 	pb.UnimplementedPaymentServiceServer
 }
 
-// NewPaymentServer returns a new PaymentServer.
+// NewPaymentServer returns a new PaymentServer instance.
 func NewPaymentServer() *PaymentServer {
 	return &PaymentServer{}
 }
 
-// ProcessPayment processes a payment, stores it, and publishes a payment_successful event.
 func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPaymentRequest) (*pb.PaymentResponse, error) {
 	payment := models.Payment{
 		OrderID:         uint(req.OrderId),
@@ -39,28 +39,27 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPayme
 		PaymentGateway:  "TestGateway",
 		GatewayResponse: "Payment processing simulated",
 	}
-
-	// Validate and create payment record.
 	if err := payment.Validate(); err != nil {
 		return nil, fmt.Errorf("payment validation failed: %v", err)
 	}
-
 	if err := db.DB.Create(&payment).Error; err != nil {
 		return nil, fmt.Errorf("failed to process payment: %v", err)
 	}
 
 	// Simulate payment success.
 	payment.Status = models.PaymentSuccess
-	db.DB.Save(&payment)
+	if err := db.DB.Save(&payment).Error; err != nil {
+		return nil, fmt.Errorf("failed to update payment status: %v", err)
+	}
 
-	// Flush any existing cache for this payment (if applicable).
-	// producers.PublishEvent will be used to notify other services.
 	eventPayload, err := json.Marshal(payment)
 	if err != nil {
-		// Log and continue.
+		log.Printf("Failed to marshal payment event: %v", err)
 	} else {
 		if err := producers.PublishEvent(topics.PaymentSuccessful, eventPayload); err != nil {
-			// Log error but continue.
+			log.Printf("Failed to publish payment event: %v", err)
+		} else {
+			log.Printf("✅ Payment event published for payment ID %d", payment.ID)
 		}
 	}
 
@@ -79,7 +78,7 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.ProcessPayme
 	}, nil
 }
 
-// GetPayment retrieves a payment by its ID (cache integration can be added similarly if desired).
+// GetPayment retrieves a payment record by its ID.
 func (s *PaymentServer) GetPayment(ctx context.Context, req *pb.GetPaymentRequest) (*pb.PaymentResponse, error) {
 	var payment models.Payment
 	if err := db.DB.First(&payment, req.PaymentId).Error; err != nil {
