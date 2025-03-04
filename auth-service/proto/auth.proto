@@ -39,6 +39,12 @@ message AuthResponse {
     string access_token = 2;
     string username     = 3;
     string email        = 4;
+    string phone        = 5;
+    string address      = 6;
+    string city         = 7;
+    string post_code    = 8;
+    string role         = 9;
+    string message      = 10;
 }
 
 message ValidateResponse {
