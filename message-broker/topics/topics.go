@@ -6,4 +6,6 @@ const (
 	PaymentSuccessful = "payment_successful"
 	InventoryUpdated  = "inventory_updated"
 	ReviewAdded       = "review_added"
+	ReviewDeleted     = "review_deleted"
+	WishlistUpdated   = "wishlist_updated"
 )
