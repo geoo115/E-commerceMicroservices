@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package auth;
+
 option go_package = "github.com/geoo115/E-commerceMicroservices/auth-service/proto";
 
 service AuthService {
@@ -10,14 +11,21 @@ service AuthService {
     rpc ValidateToken(ValidateTokenRequest) returns (ValidateResponse) {}
 }
 
+message Address {
+    string address_line1 = 1;
+    string address_line2 = 2;
+    string city          = 3;
+    string state         = 4;
+    string postal_code   = 5;
+    string country       = 6;
+}
+
 message SignupRequest {
     string username  = 1;
     string password  = 2;
     string email     = 3;
     string phone     = 4;
-    string address   = 5;
-    string city      = 6;
-    string post_code = 7;
+    Address address   = 5;
 }
 
 message LoginRequest {
@@ -40,11 +48,9 @@ message AuthResponse {
     string username     = 3;
     string email        = 4;
     string phone        = 5;
-    string address      = 6;
-    string city         = 7;
-    string post_code    = 8;
-    string role         = 9;
-    string message      = 10;
+    Address address = 6;
+    string role         = 7;
+    string message      = 8;
 }
 
 message ValidateResponse {

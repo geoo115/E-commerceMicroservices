@@ -55,23 +55,27 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 		return nil, status.Errorf(codes.Internal, "Failed to create user")
 	}
 
-	log.Printf("Signup Request received: Username=%s, Email=%s, Address=%s, City=%s, PostCode=%s",
-		req.GetUsername(), req.GetEmail(), req.GetAddress(), req.GetCity(), req.GetPostCode())
+	log.Printf("Signup Request received: Username=%s, Email=%s",
+		req.GetUsername(), req.GetEmail())
 
-	if req.GetAddress() != "" {
+	log.Printf("User created with ID: %d", user.ID)
+	if req.GetAddress() != nil {
 		address := models.Address{
-			UserID:   user.ID,
-			Address:  req.GetAddress(),
-			City:     req.GetCity(),
-			PostCode: req.GetPostCode(),
+			UserID:       user.ID,
+			AddressLine1: req.GetAddress().AddressLine1,
+			AddressLine2: req.GetAddress().AddressLine2,
+			City:         req.GetAddress().City,
+			State:        req.GetAddress().State,
+			PostalCode:   req.GetAddress().PostalCode,
+			Country:      req.GetAddress().Country,
 		}
+
+		log.Printf("Attempting to create address: %+v", address)
 
 		if err := db.DB.Create(&address).Error; err != nil {
 			log.Printf("Error creating address for user %d: %v", user.ID, err)
-			// You might want to return the error instead of continuing
 		} else {
-			log.Printf("Address created successfully for user %d: %s, %s, %s",
-				user.ID, address.Address, address.City, address.PostCode)
+			log.Printf("Address created successfully for user %d: %v", user.ID, address)
 		}
 	}
 
@@ -90,6 +94,8 @@ func (s *AuthServer) Signup(ctx context.Context, req *proto.SignupRequest) (*pro
 		UserId:   uint64(user.ID),
 		Username: req.GetUsername(),
 		Email:    req.GetEmail(),
+		Phone:    req.GetPhone(),
+		Address:  req.GetAddress(),
 	}, nil
 }
 
@@ -151,6 +157,15 @@ func (s *AuthServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 		AccessToken: token,
 		Username:    user.Username,
 		Email:       user.Email,
+		Phone:       user.Phone,
+		Address: &proto.Address{
+			AddressLine1: user.Address.AddressLine1,
+			AddressLine2: user.Address.AddressLine2,
+			City:         user.Address.City,
+			State:        user.Address.State,
+			PostalCode:   user.Address.PostalCode,
+			Country:      user.Address.Country,
+		},
 	}, nil
 }
 
