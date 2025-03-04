@@ -14,22 +14,20 @@ import (
 func main() {
 	log.Println("🚀 Starting Message Broker Service...")
 
-	// Set up a channel to handle OS interrupts for graceful shutdown.
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	// Define an event handler for incoming Kafka messages.
+	// Define a generic handler that logs the event.
 	handler := func(message []byte) {
 		log.Printf("🔄 Processing event: %s", string(message))
-		// Here you can add code to process the event, e.g. updating services.
 	}
 
-	// Start consumer in a goroutine.
-	go func() {
-		consumers.ConsumeEvents(topics.OrderPlaced, handler)
-	}()
+	// Start consumers with dedicated consumer groups.
+	go consumers.ConsumeEvents(topics.OrderPlaced, "order-service-group", handler)
+	go consumers.ConsumeEvents(topics.PaymentSuccessful, "payment-service-group", handler)
+	go consumers.ConsumeEvents(topics.InventoryUpdated, "inventory-service-group", handler)
+	go consumers.ConsumeEvents(topics.ReviewAdded, "review-service-group", handler)
+	go consumers.ConsumeEvents(topics.ReviewDeleted, "review-service-group", handler)
+	go consumers.ConsumeEvents(topics.WishlistUpdated, "wishlist-service-group", handler)
 
-	// Example: Publish an event (for testing purposes).
+	// Publish a test event.
 	go func() {
 		message := []byte("Test order placed event")
 		if err := producers.PublishEvent(topics.OrderPlaced, message); err != nil {
@@ -37,7 +35,9 @@ func main() {
 		}
 	}()
 
-	// Block main thread until a termination signal is received.
+	// Wait for termination signal.
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
 	log.Println("🛑 Shutting down Message Broker Service...")
 }
