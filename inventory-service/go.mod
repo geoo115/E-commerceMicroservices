@@ -3,7 +3,7 @@ module github.com/geoo115/E-commerceMicroservices/inventory-service
 go 1.24.0
 
 require (
-	github.com/geoo115/E-commerceMicroservices/message-broker v0.3.0
+	github.com/geoo115/E-commerceMicroservices/message-broker v0.2.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.10.0

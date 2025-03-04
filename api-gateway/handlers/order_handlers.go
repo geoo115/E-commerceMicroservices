@@ -23,13 +23,14 @@ func getOrderServiceClient() (pbOrder.OrderServiceClient, *grpc.ClientConn, erro
 	return pbOrder.NewOrderServiceClient(conn), conn, nil
 }
 
-// CreateOrder creates a new order.
+// CreateOrder handles the HTTP request to create a new order.
 func CreateOrder(c *gin.Context) {
 	var req pbOrder.CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	client, conn, err := getOrderServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to order service"})
@@ -39,6 +40,7 @@ func CreateOrder(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.CreateOrder(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -55,6 +57,7 @@ func GetOrder(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id"})
 		return
 	}
+
 	client, conn, err := getOrderServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to order service"})
@@ -64,6 +67,7 @@ func GetOrder(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.GetOrder(ctx, &pbOrder.GetOrderRequest{OrderId: orderID})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -80,6 +84,7 @@ func GetUserOrders(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
 		return
 	}
+
 	client, conn, err := getOrderServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to order service"})
@@ -89,9 +94,10 @@ func GetUserOrders(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.ListOrders(ctx, &pbOrder.ListOrdersRequest{
 		UserId: uid,
-		Page:   1, // Adjust page/limit as needed.
+		Page:   1, // Adjust pagination parameters as needed.
 		Limit:  10,
 	})
 	if err != nil {
@@ -101,13 +107,14 @@ func GetUserOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// UpdateOrderStatus updates the status of an order.
+// UpdateOrderStatus updates the status of an existing order.
 func UpdateOrderStatus(c *gin.Context) {
 	var req pbOrder.UpdateOrderStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	client, conn, err := getOrderServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to order service"})
@@ -117,6 +124,7 @@ func UpdateOrderStatus(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.UpdateOrderStatus(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

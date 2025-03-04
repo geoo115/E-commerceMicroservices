@@ -16,7 +16,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// ReviewServer implements the gRPC ReviewService.
 type ReviewServer struct {
 	pb.UnimplementedReviewServiceServer
 }
@@ -25,7 +24,6 @@ func NewReviewServer() *ReviewServer {
 	return &ReviewServer{}
 }
 
-// helper functions for cache keys.
 func reviewCacheKey(reviewID uint) string {
 	return fmt.Sprintf("review:%d", reviewID)
 }
@@ -45,12 +43,9 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 		Rating:    int(req.Rating),
 		Comment:   req.Comment,
 	}
-
 	if err := db.DB.Create(&review).Error; err != nil {
 		return nil, fmt.Errorf("failed to create review: %v", err)
 	}
-
-	// Publish review_added event.
 	eventPayload, err := json.Marshal(review)
 	if err != nil {
 		log.Printf("Failed to marshal review event: %v", err)
@@ -59,7 +54,6 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 			log.Printf("Failed to publish review event: %v", err)
 		}
 	}
-
 	return &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
 		UserId:    uint64(review.UserID),
@@ -69,7 +63,7 @@ func (s *ReviewServer) CreateReview(ctx context.Context, req *pb.CreateReviewReq
 	}, nil
 }
 
-// GetReview retrieves a review by its ID.
+// GetReview retrieves a review by its ID, using caching if available.
 func (s *ReviewServer) GetReview(ctx context.Context, req *pb.GetReviewRequest) (*pb.ReviewResponse, error) {
 	key := reviewCacheKey(uint(req.ReviewId))
 	cached, err := cache.RedisClient.Get(ctx, key).Result()
@@ -105,7 +99,7 @@ func (s *ReviewServer) GetReview(ctx context.Context, req *pb.GetReviewRequest) 
 	return resp, nil
 }
 
-// ListReviews lists all reviews for a given product.
+// ListReviews lists all reviews for a given product, using caching if available.
 func (s *ReviewServer) ListReviews(ctx context.Context, req *pb.ListReviewsRequest) (*pb.ListReviewsResponse, error) {
 	key := reviewsByProductCacheKey(req.ProductId)
 	cached, err := cache.RedisClient.Get(ctx, key).Result()
@@ -141,7 +135,7 @@ func (s *ReviewServer) ListReviews(ctx context.Context, req *pb.ListReviewsReque
 	return res, nil
 }
 
-// DeleteReview deletes a review.
+// DeleteReview deletes a review and publishes a review_deleted event.
 func (s *ReviewServer) DeleteReview(ctx context.Context, req *pb.DeleteReviewRequest) (*pb.ReviewResponse, error) {
 	var review models.Review
 	if err := db.DB.First(&review, req.ReviewId).Error; err != nil {
@@ -155,9 +149,25 @@ func (s *ReviewServer) DeleteReview(ctx context.Context, req *pb.DeleteReviewReq
 		return nil, fmt.Errorf("failed to delete review: %v", err)
 	}
 
-	// Invalidate the caches.
+	// Invalidate caches.
 	cache.RedisClient.Del(ctx, reviewCacheKey(uint(req.ReviewId)))
 	cache.RedisClient.Del(ctx, reviewsByProductCacheKey(uint64(review.ProductID)))
+
+	// Publish review_deleted event.
+	delEvent := map[string]interface{}{
+		"action":    "review_deleted",
+		"reviewId":  review.ID,
+		"productId": review.ProductID,
+		"userId":    review.UserID,
+	}
+	eventPayload, err := json.Marshal(delEvent)
+	if err != nil {
+		log.Printf("Failed to marshal review_deleted event: %v", err)
+	} else {
+		if err := producers.PublishEvent(topics.ReviewDeleted, eventPayload); err != nil {
+			log.Printf("Failed to publish review_deleted event: %v", err)
+		}
+	}
 
 	return &pb.ReviewResponse{
 		ReviewId:  uint64(review.ID),
@@ -168,7 +178,7 @@ func (s *ReviewServer) DeleteReview(ctx context.Context, req *pb.DeleteReviewReq
 	}, nil
 }
 
-// AddToWishlist adds a product to a user's wishlist.
+// AddToWishlist adds a product to a user's wishlist and publishes a wishlist_updated event.
 func (s *ReviewServer) AddToWishlist(ctx context.Context, req *pb.AddToWishlistRequest) (*pb.WishlistResponse, error) {
 	uniqueIndex := fmt.Sprintf("%d-%d", req.UserId, req.ProductId)
 	wishlist := models.Wishlist{
@@ -184,6 +194,22 @@ func (s *ReviewServer) AddToWishlist(ctx context.Context, req *pb.AddToWishlistR
 	// Invalidate wishlist cache for the user.
 	cache.RedisClient.Del(ctx, wishlistCacheKey(req.UserId))
 
+	// Publish wishlist_updated event.
+	wlEvent := map[string]interface{}{
+		"action":     "wishlist_item_added",
+		"wishlistId": wishlist.ID,
+		"userId":     wishlist.UserID,
+		"productId":  wishlist.ProductID,
+	}
+	eventPayload, err := json.Marshal(wlEvent)
+	if err != nil {
+		log.Printf("Failed to marshal wishlist add event: %v", err)
+	} else {
+		if err := producers.PublishEvent(topics.WishlistUpdated, eventPayload); err != nil {
+			log.Printf("Failed to publish wishlist add event: %v", err)
+		}
+	}
+
 	return &pb.WishlistResponse{
 		WishlistId: uint64(wishlist.ID),
 		UserId:     uint64(wishlist.UserID),
@@ -191,7 +217,7 @@ func (s *ReviewServer) AddToWishlist(ctx context.Context, req *pb.AddToWishlistR
 	}, nil
 }
 
-// RemoveFromWishlist removes a product from a user's wishlist.
+// RemoveFromWishlist removes a product from a user's wishlist and publishes a wishlist_updated event.
 func (s *ReviewServer) RemoveFromWishlist(ctx context.Context, req *pb.RemoveFromWishlistRequest) (*pb.WishlistResponse, error) {
 	uniqueIndex := fmt.Sprintf("%d-%d", req.UserId, req.ProductId)
 	var wishlist models.Wishlist
@@ -206,6 +232,22 @@ func (s *ReviewServer) RemoveFromWishlist(ctx context.Context, req *pb.RemoveFro
 	// Invalidate wishlist cache for the user.
 	cache.RedisClient.Del(ctx, wishlistCacheKey(req.UserId))
 
+	// Publish wishlist_updated event.
+	wlEvent := map[string]interface{}{
+		"action":     "wishlist_item_removed",
+		"wishlistId": wishlist.ID,
+		"userId":     wishlist.UserID,
+		"productId":  wishlist.ProductID,
+	}
+	eventPayload, err := json.Marshal(wlEvent)
+	if err != nil {
+		log.Printf("Failed to marshal wishlist remove event: %v", err)
+	} else {
+		if err := producers.PublishEvent(topics.WishlistUpdated, eventPayload); err != nil {
+			log.Printf("Failed to publish wishlist remove event: %v", err)
+		}
+	}
+
 	return &pb.WishlistResponse{
 		WishlistId: uint64(wishlist.ID),
 		UserId:     uint64(wishlist.UserID),
@@ -213,7 +255,7 @@ func (s *ReviewServer) RemoveFromWishlist(ctx context.Context, req *pb.RemoveFro
 	}, nil
 }
 
-// GetWishlist retrieves all wishlist items for a user.
+// GetWishlist retrieves all wishlist items for a user, using caching if available.
 func (s *ReviewServer) GetWishlist(ctx context.Context, req *pb.GetWishlistRequest) (*pb.WishlistListResponse, error) {
 	key := wishlistCacheKey(req.UserId)
 	cached, err := cache.RedisClient.Get(ctx, key).Result()
@@ -245,4 +287,15 @@ func (s *ReviewServer) GetWishlist(ctx context.Context, req *pb.GetWishlistReque
 	}
 
 	return res, nil
+}
+
+func HandleReviewAddedEvent(message []byte) {
+	log.Printf("Handling review_added event: %s", string(message))
+	// TODO: Process the review added event as needed.
+}
+
+// HandleReviewDeletedEvent processes a review_deleted event.
+func HandleReviewDeletedEvent(message []byte) {
+	log.Printf("Handling review_deleted event: %s", string(message))
+	// TODO: Process the review deleted event as needed.
 }

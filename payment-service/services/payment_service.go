@@ -99,3 +99,8 @@ func (s *PaymentServer) GetPayment(ctx context.Context, req *pb.GetPaymentReques
 		ProcessedAt:     payment.ProcessedAt.Format(time.RFC3339),
 	}, nil
 }
+
+func HandleOrderPlacedForPayment(message []byte) {
+	log.Printf("Handling order placed event in Payment Service: %s", string(message))
+	// TODO: Parse the message and initiate payment processing as needed.
+}

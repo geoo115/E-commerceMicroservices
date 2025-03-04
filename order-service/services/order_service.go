@@ -20,12 +20,11 @@ type OrderServer struct {
 	pb.UnimplementedOrderServiceServer
 }
 
-// NewOrderServer creates a new OrderServer.
+// NewOrderServer creates a new instance of OrderServer.
 func NewOrderServer() *OrderServer {
 	return &OrderServer{}
 }
 
-// CreateOrder creates a new order and publishes an order_placed event.
 func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.OrderResponse, error) {
 	var totalAmount float64
 	for _, item := range req.Items {
@@ -38,14 +37,11 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 		Status:      "created",
 	}
 
-	// Begin a transaction.
 	tx := db.DB.Begin()
 	if err := tx.Create(&order).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to create order: %v", err)
 	}
-
-	// Create each order item.
 	for _, item := range req.Items {
 		orderItem := models.OrderItem{
 			OrderID:   order.ID,
@@ -58,13 +54,11 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 			return nil, fmt.Errorf("failed to create order item: %v", err)
 		}
 	}
-
 	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
 		return nil, fmt.Errorf("transaction failed: %v", err)
 	}
 
-	// Publish the order_placed event.
+	// Publish order_placed event.
 	eventPayload, err := json.Marshal(order)
 	if err != nil {
 		log.Printf("Failed to marshal order event: %v", err)
@@ -77,7 +71,7 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 	return s.getOrderResponse(order.ID)
 }
 
-// getOrderResponse constructs an OrderResponse from an order ID.
+// getOrderResponse constructs an OrderResponse based on the order ID.
 func (s *OrderServer) getOrderResponse(id uint) (*pb.OrderResponse, error) {
 	var order models.Order
 	if err := db.DB.Preload("Items").First(&order, id).Error; err != nil {
@@ -120,14 +114,11 @@ func (s *OrderServer) UpdateOrderStatus(ctx context.Context, req *pb.UpdateOrder
 
 func (s *OrderServer) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.OrderResponse, error) {
 	var order models.Order
-	// Convert uint64 to uint for GORM
 	orderID := uint(req.OrderId)
 
-	// Explicit WHERE clause
 	if err := db.DB.Preload("Items").
 		Where("id = ?", orderID).
 		First(&order).Error; err != nil {
-
 		return nil, status.Errorf(codes.NotFound, "order not found")
 	}
 

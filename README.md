@@ -8,7 +8,7 @@
 
 A production-ready, scalable e-commerce platform built with microservices architecture using Go, gRPC, and Apache Kafka. Designed for high performance, reliability, and maintainability.
 
-![Architecture Diagram](Untitled%20diagram-2025-01-30-214416.svg)
+![Architecture Diagram](diagram.svg)
 
 ## 🚀 Quick Start
 
@@ -160,21 +160,6 @@ ecommerce-microservices/
 │   ├── Dockerfile
 │   └── go.mod
 │
-├── shared/              # Shared libraries and utilities
-│   ├── logging/
-│   ├── errors/
-│   ├── tracing/
-│   ├── monitoring/
-│   ├── constants/
-│   ├── validation/
-│   └── go.mod
-│
-├── service-discovery/   # Service registry and discovery
-│   ├── main.go
-│   ├── registry/
-│   ├── Dockerfile
-│   └── go.mod
-│
 ├── monitoring/          # Monitoring and observability
 │   ├── prometheus/
 │   ├── grafana/
@@ -183,30 +168,8 @@ ecommerce-microservices/
 │   ├── dashboards/
 │   └── docker-compose.yml
 │
-├── deployment/          # Deployment configurations
-│   ├── kubernetes/
-│   │   ├── base/
-│   │   └── overlays/
-│   │       ├── dev/
-│   │       ├── staging/
-│   │       └── prod/
-│   ├── terraform/
-│   └── scripts/
-│
-├── docs/                # Documentation
-│   ├── api/
-│   ├── architecture/
-│   ├── development/
-│   └── operations/
-│
-├── scripts/             # Helper scripts
-│   ├── setup.sh
-│   ├── build-all.sh
-│   └── reset-dev.sh
-│
 ├── docker-compose.yml   # Compose file for microservices setup
 ├── docker-compose.dev.yml  # Development environment specifics
-├── Makefile             # Automation scripts
 └── README.md            # Documentation
 ```
 ### Component Flow

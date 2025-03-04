@@ -23,13 +23,14 @@ func getPaymentServiceClient() (pbPayment.PaymentServiceClient, *grpc.ClientConn
 	return pbPayment.NewPaymentServiceClient(conn), conn, nil
 }
 
-// ProcessPayment processes the payment for an order.
+// ProcessPayment handles the HTTP request to process a payment.
 func ProcessPayment(c *gin.Context) {
 	var req pbPayment.ProcessPaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	client, conn, err := getPaymentServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to payment service"})
@@ -39,6 +40,7 @@ func ProcessPayment(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.ProcessPayment(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -47,7 +49,7 @@ func ProcessPayment(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPayment retrieves the payment details for a given payment ID.
+// GetPayment retrieves payment details for a given payment ID.
 func GetPayment(c *gin.Context) {
 	paymentId := c.Param("paymentId")
 	pid, err := strconv.ParseUint(paymentId, 10, 32)
@@ -55,6 +57,7 @@ func GetPayment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payment id"})
 		return
 	}
+
 	client, conn, err := getPaymentServiceClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to connect to payment service"})
@@ -64,6 +67,7 @@ func GetPayment(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	resp, err := client.GetPayment(ctx, &pbPayment.GetPaymentRequest{PaymentId: pid})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

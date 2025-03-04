@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-// ConsumeEvents listens to a Kafka topic using the specified consumer group and processes
-// each message using the provided handler.
+// ConsumeEvents listens to a Kafka topic using the specified consumer group
+// and processes each message using the provided handler.
 func ConsumeEvents(topic string, groupID string, handler func([]byte)) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "kafka_broker:9092", // Adjust as needed.
-		"group.id":          groupID,
+		"group.id":          groupID,             // Use the provided group ID.
 		"auto.offset.reset": "earliest",
 	})
 	if err != nil {

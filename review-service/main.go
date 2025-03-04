@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/geoo115/E-commerceMicroservices/message-broker/consumers"
+	"github.com/geoo115/E-commerceMicroservices/message-broker/topics"
 	"github.com/geoo115/E-commerceMicroservices/review-service/db"
 	pb "github.com/geoo115/E-commerceMicroservices/review-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/review-service/services"
@@ -15,6 +17,7 @@ import (
 )
 
 func main() {
+	// Load environment variables.
 	if err := godotenv.Load(".env"); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
@@ -26,6 +29,16 @@ func main() {
 	if port == "" {
 		port = "50056"
 	}
+
+	// Start consumers for review events using the review service's dedicated group.
+	go consumers.ConsumeEvents(topics.ReviewAdded, "review-service-group", func(message []byte) {
+		log.Printf("Review Service received review_added event: %s", string(message))
+		services.HandleReviewAddedEvent(message)
+	})
+	go consumers.ConsumeEvents(topics.ReviewDeleted, "review-service-group", func(message []byte) {
+		log.Printf("Review Service received review_deleted event: %s", string(message))
+		services.HandleReviewDeletedEvent(message)
+	})
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
