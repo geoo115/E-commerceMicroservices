@@ -10,19 +10,25 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy module files first
-COPY go.mod go.sum ./
+# Copy the message-broker source code to the correct location for replace directive
+COPY ./message-broker ../message-broker
+
+# Copy module files for inventory-service
+COPY ./inventory-service/go.mod ./inventory-service/go.sum ./
 
 # Install dependencies
 RUN go mod download
 
-# Copy service code
-COPY . .
+# Copy inventory-service code
+COPY ./inventory-service .
 
 # Build
 RUN go build -o inventory-service .
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y \
+    librdkafka1 \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/
 COPY --from=builder /app/inventory-service .
 EXPOSE 50057

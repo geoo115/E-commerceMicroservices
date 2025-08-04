@@ -10,8 +10,6 @@ import (
 	pb "github.com/geoo115/E-commerceMicroservices/inventory-service/proto"
 	"github.com/geoo115/E-commerceMicroservices/inventory-service/services"
 
-	"github.com/geoo115/E-commerceMicroservices/message-broker/consumers"
-	"github.com/geoo115/E-commerceMicroservices/message-broker/topics"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -27,12 +25,8 @@ func main() {
 
 	cache.InitRedis()
 
-	// Start a consumer for order_placed events using the inventory service's dedicated group.
-	go consumers.ConsumeEvents(topics.OrderPlaced, "inventory-service-group", func(message []byte) {
-		log.Printf("Inventory Service received order event: %s", string(message))
-		// Process the order event. (Implement this handler in services package)
-		services.StartOrderPlacedConsumerHandler(message)
-	})
+	// Start the order placed consumer
+	go services.StartOrderPlacedConsumer()
 
 	port := os.Getenv("INVENTORY_SERVICE_PORT")
 	if port == "" {

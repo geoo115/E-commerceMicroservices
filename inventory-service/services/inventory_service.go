@@ -139,5 +139,5 @@ func StartOrderPlacedConsumer() {
 	}
 
 	// Start Kafka consumer for order_placed events.
-	go consumers.ConsumeEvents(OrderPlacedTopic, handler)
+	go consumers.ConsumeEvents(OrderPlacedTopic, "inventory-service-group", handler)
 }
