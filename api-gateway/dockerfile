@@ -6,12 +6,24 @@ RUN apk update && apk add --no-cache git
 
 WORKDIR /app
 
-# Copy go.mod and go.sum to cache dependencies
-COPY go.mod go.sum ./
+# Copy all service directories to the correct locations for replace directives
+COPY ./auth-service ../auth-service
+COPY ./cart-service ../cart-service
+COPY ./inventory-service ../inventory-service
+COPY ./order-service ../order-service
+COPY ./payment-service ../payment-service
+COPY ./product-service ../product-service
+COPY ./review-service ../review-service
+COPY ./message-broker ../message-broker
+
+# Copy api-gateway go.mod and go.sum first
+COPY ./api-gateway/go.mod ./api-gateway/go.sum ./
+
+# Download dependencies
 RUN go mod download
 
-# Copy the source code
-COPY . .
+# Copy the api-gateway source code
+COPY ./api-gateway .
 
 # Build the binary
 RUN go build -o api-gateway .

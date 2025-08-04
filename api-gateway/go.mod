@@ -3,16 +3,16 @@ module github.com/geoo115/E-commerceMicroservices/api-gateway
 go 1.24.0
 
 require (
-	github.com/geoo115/E-commerceMicroservices/auth-service v0.2.0
-	github.com/geoo115/E-commerceMicroservices/cart-service v0.0.0-20250304075129-4d2e47a5cbbb
-	github.com/geoo115/E-commerceMicroservices/inventory-service v0.0.0-20250304075129-4d2e47a5cbbb
-	github.com/geoo115/E-commerceMicroservices/order-service v0.0.0-20250304075129-4d2e47a5cbbb
-	github.com/geoo115/E-commerceMicroservices/payment-service v0.0.0-20250304075129-4d2e47a5cbbb
-	github.com/geoo115/E-commerceMicroservices/product-service v0.3.0
-	github.com/geoo115/E-commerceMicroservices/review-service v0.0.0-20250304075129-4d2e47a5cbbb
+	github.com/geoo115/E-commerceMicroservices/auth-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/cart-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/inventory-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/order-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/payment-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/product-service v0.0.0-00010101000000-000000000000
+	github.com/geoo115/E-commerceMicroservices/review-service v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 )
 
 require (
@@ -50,12 +50,27 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/geoo115/E-commerceMicroservices/auth-service => ../auth-service
+
+replace github.com/geoo115/E-commerceMicroservices/cart-service => ../cart-service
+
+replace github.com/geoo115/E-commerceMicroservices/inventory-service => ../inventory-service
+
+replace github.com/geoo115/E-commerceMicroservices/order-service => ../order-service
+
+replace github.com/geoo115/E-commerceMicroservices/payment-service => ../payment-service
+
+replace github.com/geoo115/E-commerceMicroservices/product-service => ../product-service
+
+replace github.com/geoo115/E-commerceMicroservices/review-service => ../review-service
