@@ -144,3 +144,10 @@ func convertToOrderResponse(o models.Order) *pb.OrderResponse {
 		Items:       items,
 	}
 }
+
+// HandlePaymentSuccessfulEvent processes payment successful events
+func HandlePaymentSuccessfulEvent(message []byte) {
+	// TODO: Implement payment successful event handling
+	// This could involve updating order status, sending notifications, etc.
+	log.Printf("Processing payment successful event: %s", string(message))
+}
