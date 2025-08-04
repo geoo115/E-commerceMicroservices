@@ -1,0 +1,13 @@
+go 1.24.0
+
+use (
+	./api-gateway
+	./auth-service
+	./cart-service
+	./inventory-service
+	./message-broker
+	./order-service
+	./payment-service
+	./product-service
+	./review-service
+)
