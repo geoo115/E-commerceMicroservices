@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package order.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// OrderService owns the order lifecycle and drives the order saga.
+service OrderService {
+  // CreateOrder prices every item from product-service; client prices are never accepted.
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  // Created, waiting for inventory to reserve stock.
+  ORDER_STATUS_PENDING = 1;
+  // Stock reserved, waiting for payment.
+  ORDER_STATUS_CONFIRMED = 2;
+  ORDER_STATUS_PAID = 3;
+  ORDER_STATUS_SHIPPED = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_CANCELLED = 6;
+}
+
+message OrderItem {
+  uint64 product_id = 1;
+  int32 quantity = 2;
+  int64 unit_price_cents = 3;
+}
+
+message Order {
+  uint64 id = 1;
+  uint64 user_id = 2;
+  OrderStatus status = 3;
+  int64 total_cents = 4;
+  repeated OrderItem items = 5;
+  string cancellation_reason = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message CreateOrderRequest {
+  message Item {
+    uint64 product_id = 1;
+    int32 quantity = 2;
+  }
+  uint64 user_id = 1;
+  repeated Item items = 2;
+}
+
+message CreateOrderResponse {
+  Order order = 1;
+}
+
+message GetOrderRequest {
+  uint64 order_id = 1;
+}
+
+message GetOrderResponse {
+  Order order = 1;
+}
+
+message ListOrdersRequest {
+  uint64 user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListOrdersResponse {
+  repeated Order orders = 1;
+  int64 total = 2;
+}
+
+message CancelOrderRequest {
+  uint64 order_id = 1;
+  string reason = 2;
+}
+
+message CancelOrderResponse {
+  Order order = 1;
+}
+
+message UpdateOrderStatusRequest {
+  uint64 order_id = 1;
+  OrderStatus status = 2;
+}
+
+message UpdateOrderStatusResponse {
+  Order order = 1;
+}

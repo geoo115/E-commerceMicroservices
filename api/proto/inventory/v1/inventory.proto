@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+// InventoryService owns stock levels. Order-driven reservations happen
+// asynchronously through Kafka events; this API covers reads and manual restocks.
+service InventoryService {
+  rpc GetStock(GetStockRequest) returns (GetStockResponse);
+  rpc AdjustStock(AdjustStockRequest) returns (AdjustStockResponse);
+}
+
+message GetStockRequest {
+  uint64 product_id = 1;
+}
+
+message GetStockResponse {
+  uint64 product_id = 1;
+  int32 available = 2;
+  int32 reserved = 3;
+}
+
+message AdjustStockRequest {
+  uint64 product_id = 1;
+  // Positive to restock, negative to write off. Available stock never drops below zero.
+  int32 delta = 2;
+}
+
+message AdjustStockResponse {
+  uint64 product_id = 1;
+  int32 available = 2;
+  int32 reserved = 3;
+}

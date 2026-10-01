@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package product.v1;
+
+// ProductService owns the catalog: categories, products and their prices.
+// It is the single source of truth for prices used when placing orders.
+service ProductService {
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  // BatchGetProducts returns NOT_FOUND if any of the requested products does not exist.
+  rpc BatchGetProducts(BatchGetProductsRequest) returns (BatchGetProductsResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+}
+
+message Category {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message Product {
+  uint64 id = 1;
+  string name = 2;
+  string description = 3;
+  int64 price_cents = 4;
+  Category category = 5;
+  double rating_average = 6;
+  uint32 rating_count = 7;
+}
+
+message CreateCategoryRequest {
+  string name = 1;
+}
+
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+message ListCategoriesRequest {}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  int64 price_cents = 3;
+  uint64 category_id = 4;
+  // Initial stock is forwarded to inventory-service through a product.created event.
+  int32 initial_stock = 5;
+}
+
+message CreateProductResponse {
+  Product product = 1;
+}
+
+message GetProductRequest {
+  uint64 id = 1;
+}
+
+message GetProductResponse {
+  Product product = 1;
+}
+
+message BatchGetProductsRequest {
+  repeated uint64 ids = 1;
+}
+
+message BatchGetProductsResponse {
+  repeated Product products = 1;
+}
+
+message ListProductsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  // Case-insensitive substring match on the product name.
+  string query = 3;
+  uint64 category_id = 4;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+  int64 total = 2;
+}
+
+message UpdateProductRequest {
+  uint64 id = 1;
+  string name = 2;
+  string description = 3;
+  int64 price_cents = 4;
+  uint64 category_id = 5;
+}
+
+message UpdateProductResponse {
+  Product product = 1;
+}
+
+message DeleteProductRequest {
+  uint64 id = 1;
+}
+
+message DeleteProductResponse {}

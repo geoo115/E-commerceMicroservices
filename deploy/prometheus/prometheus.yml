@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: api-gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api-gateway:8080"]
+
+  # Every gRPC service exposes Prometheus metrics on :9100 (METRICS_ADDR).
+  - job_name: services
+    static_configs:
+      - targets:
+          - auth-service:9100
+          - product-service:9100
+          - inventory-service:9100
+          - order-service:9100
+          - payment-service:9100
+          - cart-service:9100
+          - review-service:9100
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: service

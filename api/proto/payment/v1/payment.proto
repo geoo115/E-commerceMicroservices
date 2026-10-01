@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package payment.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// PaymentService charges confirmed orders through a simulated payment provider.
+service PaymentService {
+  // ProcessPayment loads the order from order-service, checks that it belongs to
+  // user_id and is CONFIRMED, and charges the order total (never a client amount).
+  rpc ProcessPayment(ProcessPaymentRequest) returns (ProcessPaymentResponse);
+  rpc GetPaymentByOrder(GetPaymentByOrderRequest) returns (GetPaymentByOrderResponse);
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_SUCCEEDED = 1;
+  PAYMENT_STATUS_FAILED = 2;
+}
+
+message Payment {
+  uint64 id = 1;
+  uint64 order_id = 2;
+  uint64 user_id = 3;
+  int64 amount_cents = 4;
+  string currency = 5;
+  string method = 6;
+  PaymentStatus status = 7;
+  string transaction_id = 8;
+  string failure_reason = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message ProcessPaymentRequest {
+  uint64 order_id = 1;
+  uint64 user_id = 2;
+  // One of: card, paypal, wallet.
+  string method = 3;
+  string card_last_four = 4;
+}
+
+message ProcessPaymentResponse {
+  Payment payment = 1;
+}
+
+message GetPaymentByOrderRequest {
+  uint64 order_id = 1;
+}
+
+message GetPaymentByOrderResponse {
+  Payment payment = 1;
+}

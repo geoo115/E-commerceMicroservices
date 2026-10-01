@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package auth.v1;
+
+// AuthService owns user accounts, email verification and JWT issuing.
+service AuthService {
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc ResendVerificationCode(ResendVerificationCodeRequest) returns (ResendVerificationCodeResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  // ValidateToken returns UNAUTHENTICATED when the token is invalid or expired.
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+message Address {
+  string address_line1 = 1;
+  string address_line2 = 2;
+  string city = 3;
+  string state = 4;
+  string postal_code = 5;
+  string country = 6;
+}
+
+message User {
+  uint64 id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  string role = 5;
+  bool email_verified = 6;
+  Address address = 7;
+}
+
+message SignupRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string phone = 4;
+  Address address = 5;
+}
+
+message SignupResponse {
+  User user = 1;
+}
+
+message VerifyEmailRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message VerifyEmailResponse {}
+
+message ResendVerificationCodeRequest {
+  string email = 1;
+}
+
+message ResendVerificationCodeResponse {}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  // Unix timestamp (seconds) at which the access token expires.
+  int64 expires_at = 2;
+  User user = 3;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  uint64 user_id = 1;
+  string role = 2;
+}
+
+message GetUserRequest {
+  uint64 user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}

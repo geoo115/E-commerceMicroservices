@@ -1,0 +1,13 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/geoo115/E-commerceMicroservices/pkg/pb
+plugins:
+  - local: protoc-gen-go
+    out: pkg/pb
+    opt: paths=source_relative
+  - local: protoc-gen-go-grpc
+    out: pkg/pb
+    opt: paths=source_relative

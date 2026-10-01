@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package cart.v1;
+
+// CartService stores shopping carts (PostgreSQL, cached in Redis).
+service CartService {
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
+  // AddItem increments the quantity if the product is already in the cart.
+  rpc AddItem(AddItemRequest) returns (AddItemResponse);
+  rpc UpdateItem(UpdateItemRequest) returns (UpdateItemResponse);
+  rpc RemoveItem(RemoveItemRequest) returns (RemoveItemResponse);
+  rpc ClearCart(ClearCartRequest) returns (ClearCartResponse);
+}
+
+message CartItem {
+  uint64 product_id = 1;
+  int32 quantity = 2;
+}
+
+message Cart {
+  uint64 user_id = 1;
+  repeated CartItem items = 2;
+}
+
+message GetCartRequest {
+  uint64 user_id = 1;
+}
+
+message GetCartResponse {
+  Cart cart = 1;
+}
+
+message AddItemRequest {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+  int32 quantity = 3;
+}
+
+message AddItemResponse {
+  Cart cart = 1;
+}
+
+message UpdateItemRequest {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+  int32 quantity = 3;
+}
+
+message UpdateItemResponse {
+  Cart cart = 1;
+}
+
+message RemoveItemRequest {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+}
+
+message RemoveItemResponse {
+  Cart cart = 1;
+}
+
+message ClearCartRequest {
+  uint64 user_id = 1;
+}
+
+message ClearCartResponse {}
