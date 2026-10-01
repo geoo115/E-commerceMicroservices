@@ -36,7 +36,7 @@ expect_status() {
 # wait_for DESCRIPTION JQ_FILTER EXPECTED METHOD PATH [TOKEN]
 wait_for() {
   local what=$1 filter=$2 want=$3 method=$4 path=$5 token=${6:-} got=""
-  for _ in $(seq 1 40); do
+  for _ in $(seq 1 60); do # up to 15s: CI runners are slower than a laptop
     request "$method" "$path" "" "$token"
     got=$(jq -r "$filter" <<<"$BODY")
     [[ $got == "$want" ]] && { ok "$what → $want"; return; }
