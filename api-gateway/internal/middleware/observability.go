@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"log/slog"
 	"strconv"
 	"time"
@@ -80,5 +81,16 @@ func Metrics() gin.HandlerFunc {
 		}
 		httpRequests.WithLabelValues(c.Request.Method, route, strconv.Itoa(c.Writer.Status())).Inc()
 		httpDuration.WithLabelValues(c.Request.Method, route).Observe(time.Since(start).Seconds())
+	}
+}
+
+// Timeout bounds the time spent on a request. The deadline propagates to
+// every downstream gRPC call through the request context.
+func Timeout(d time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), d)
+		defer cancel()
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	}
 }

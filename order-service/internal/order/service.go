@@ -200,7 +200,7 @@ func (s *Service) applyEvent(ctx context.Context, ev events.Event, orderID uint6
 		_, err := transitionTx(tx, orderID, to, reason)
 		if st, ok := status.FromError(err); ok && err != nil {
 			s.log.WarnContext(ctx, "ignoring event", "event", ev.Type, "order_id", orderID, "reason", st.Message())
-			return nil
+			return nil //nolint:nilerr // a rejected transition is a business outcome, not a failure to retry
 		}
 		return err
 	})

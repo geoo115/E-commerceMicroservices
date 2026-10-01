@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -14,13 +15,20 @@ import (
 	mw "github.com/geoo115/E-commerceMicroservices/api-gateway/internal/middleware"
 )
 
+// requestTimeout is the deadline for a whole API request, including backend calls.
+const requestTimeout = 5 * time.Second
+
 // NewRouter wires every route of the public API.
 func NewRouter(h *Handler, log *slog.Logger) *gin.Engine {
 	useJSONFieldNames()
 
 	r := gin.New()
-	r.Use(gin.Recovery(), mw.RequestID(), mw.Logger(log), mw.Metrics())
+	r.Use(gin.Recovery(), mw.RequestID(), mw.Logger(log), mw.Metrics(), mw.Timeout(requestTimeout))
 	r.HandleMethodNotAllowed = true
+	r.NoRoute(func(c *gin.Context) { notFound(c, "route not found") })
+	r.NoMethod(func(c *gin.Context) {
+		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, errorBody{Error: errorDetail{Code: "METHOD_NOT_ALLOWED", Message: "method not allowed"}})
+	})
 
 	r.GET("/healthz", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))

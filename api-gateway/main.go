@@ -99,14 +99,19 @@ func run(log *slog.Logger, httpAddr string) error {
 	}
 
 	log.Info("shutting down HTTP server")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
 }
 
 func probe(url string) int {
-	client := http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return 1
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 1
 	}

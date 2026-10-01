@@ -60,7 +60,7 @@ func (s *Server) Registrar() grpc.ServiceRegistrar { return s.grpc }
 func (s *Server) Run(ctx context.Context, addr string) error {
 	s.metrics.InitializeMetrics(s.grpc)
 
-	lis, err := net.Listen("tcp", addr)
+	lis, err := new(net.ListenConfig).Listen(ctx, "tcp", addr)
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", addr, err)
 	}
